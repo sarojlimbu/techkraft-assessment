@@ -1,0 +1,18 @@
+<mat-form-field [appearance]="appearance" class="custom-input-field">
+  @if (label) {
+    <mat-label>{{ label }}</mat-label>
+  }
+
+  @if (icon) {
+    <mat-icon matPrefix>{{ icon }}</mat-icon>
+  }
+
+  <input
+    matInput
+    [type]="type"
+    [placeholder]="placeholder"
+    [value]="value"
+    [disabled]="disabled"
+    (input)="onInput($event)"
+  />
+</mat-form-field>

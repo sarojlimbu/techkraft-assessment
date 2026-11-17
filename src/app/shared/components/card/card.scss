@@ -1,0 +1,20 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.app-card {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.28);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 12px;
+  box-shadow: none;
+  color: #edf6ff;
+  overflow: hidden;
+}
+
+:host ::ng-deep .app-card .mat-mdc-card-content,
+:host ::ng-deep .app-card .mat-mdc-card-header,
+:host ::ng-deep .app-card .mat-mdc-card-actions {
+  padding: 0;
+}

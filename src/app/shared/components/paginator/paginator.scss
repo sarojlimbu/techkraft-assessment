@@ -1,0 +1,76 @@
+:host {
+  display: block;
+  width: 100%;
+  position: relative;
+  z-index: 10;
+}
+
+:host ::ng-deep .app-paginator,
+:host ::ng-deep .app-paginator .mat-mdc-paginator-container {
+  background: rgba(15, 23, 42, 0.18);
+  color: #ffffff;
+}
+
+:host ::ng-deep .app-paginator .mat-mdc-paginator-range-label,
+:host ::ng-deep .app-paginator .mat-mdc-paginator-page-size-label,
+:host ::ng-deep .app-paginator .mat-mdc-select-value,
+:host ::ng-deep .app-paginator .mat-mdc-select-value-text,
+:host ::ng-deep .app-paginator .mat-mdc-select-arrow,
+:host ::ng-deep .app-paginator .mat-mdc-paginator-navigation-previous,
+:host ::ng-deep .app-paginator .mat-mdc-paginator-navigation-next,
+:host ::ng-deep .app-paginator .mat-mdc-paginator-navigation-first,
+:host ::ng-deep .app-paginator .mat-mdc-paginator-navigation-last,
+:host ::ng-deep .app-paginator .mat-mdc-paginator-icon,
+:host ::ng-deep .app-paginator .mat-mdc-icon-button {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+:host ::ng-deep .app-paginator .mat-mdc-paginator-navigation-previous .mat-mdc-paginator-icon,
+:host ::ng-deep .app-paginator .mat-mdc-paginator-navigation-next .mat-mdc-paginator-icon,
+:host ::ng-deep .app-paginator .mat-mdc-paginator-navigation-first .mat-mdc-paginator-icon,
+:host ::ng-deep .app-paginator .mat-mdc-paginator-navigation-last .mat-mdc-paginator-icon,
+:host ::ng-deep .app-paginator .mat-mdc-paginator-icon svg,
+:host ::ng-deep .app-paginator .mat-mdc-paginator-icon path,
+:host ::ng-deep .app-paginator .mat-mdc-paginator-icon g,
+:host ::ng-deep .app-paginator .mat-mdc-icon-button svg,
+:host ::ng-deep .app-paginator .mat-mdc-icon-button path,
+:host ::ng-deep .app-paginator .mat-mdc-icon-button g {
+  stroke: #ffffff !important;
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .app-paginator .mat-mdc-paginator-navigation-disabled {
+  opacity: 0.4;
+}
+
+:host ::ng-deep .app-paginator .mat-mdc-form-field {
+  color: #ffffff;
+}
+
+:host ::ng-deep .app-paginator .mat-mdc-select-panel,
+:host ::ng-deep .mat-mdc-select-panel {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+:host ::ng-deep .app-paginator .mat-mdc-select-panel .mat-mdc-option,
+:host ::ng-deep .mat-mdc-select-panel .mat-mdc-option {
+  color: #ffffff !important;
+  background: #0f172a;
+}
+
+:host ::ng-deep .app-paginator .mat-mdc-select-panel .mat-mdc-option .mdc-list-item__primary-text,
+:host ::ng-deep .mat-mdc-select-panel .mat-mdc-option .mdc-list-item__primary-text {
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .app-paginator .mat-mdc-select-panel .mat-mdc-option:hover,
+:host ::ng-deep .app-paginator .mat-mdc-select-panel .mat-mdc-option.mdc-list-item--selected,
+:host ::ng-deep .mat-mdc-select-panel .mat-mdc-option:hover,
+:host ::ng-deep .mat-mdc-select-panel .mat-mdc-option.mdc-list-item--selected {
+  background: rgba(148, 163, 184, 0.18);
+  color: #ffffff !important;
+}
