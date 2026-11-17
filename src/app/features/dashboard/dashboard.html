@@ -1,0 +1,87 @@
+<div class="dashboard-shell">
+  <app-navbar></app-navbar>
+
+  <main class="dashboard-main">
+    <section class="page-header">
+      <h1>Application Dashboard</h1>
+
+      <div class="header-actions">
+        <app-button label="Refresh Data" variant="text" buttonClass="ghost-btn"></app-button>
+        <app-button
+          label="Create Merchant App"
+          variant="filled"
+          buttonClass="primary-btn"
+        ></app-button>
+      </div>
+    </section>
+
+    <section class="stats-grid" aria-label="Dashboard metrics">
+      @for (stat of stats; track stat.label) {
+        <app-card>
+          <div class="stat-card" [class.warning-card]="stat.warning">
+            <div class="stat-icon" [ngClass]="stat.iconClass">{{ stat.warning ? '!' : '◫' }}</div>
+            <div class="stat-value">{{ stat.value }}</div>
+            <div class="stat-label">{{ stat.label }}</div>
+          </div>
+        </app-card>
+      }
+    </section>
+
+    <section class="filter-toolbar" aria-label="Filters">
+      <app-input
+        class="search-field"
+        placeholder="Search business name, merchant ID, email..."
+        icon="search"
+      ></app-input>
+
+      <app-select
+        class="material-filter"
+        label="All Statuses"
+        [options]="statusOptions"
+      ></app-select>
+
+      <app-select
+        class="material-filter"
+        label="All Risk Levels"
+        [options]="riskOptions"
+      ></app-select>
+
+      <app-button label="Reset Filters" variant="text" buttonClass="filter-btn"></app-button>
+    </section>
+
+    <section class="table-panel">
+      <ng-template #viewAction let-row>
+        <app-button
+          label="View"
+          variant="text"
+          buttonClass="table-action-btn view-action"
+          (buttonClick)="handleView(row)"
+        ></app-button>
+      </ng-template>
+
+      <ng-template #editAction let-row>
+        <app-button
+          label="Edit Draft"
+          variant="filled"
+          buttonClass="table-action-btn review-action"
+          (buttonClick)="handleReview(row)"
+        ></app-button>
+      </ng-template>
+
+      <ng-template #reviewAction let-row>
+        <app-button
+          label="Review"
+          variant="text"
+          buttonClass="table-action-btn view-action"
+          (buttonClick)="handleReview(row)"
+        ></app-button>
+      </ng-template>
+
+      <app-table
+        [columns]="tableColumns"
+        [data]="tableData"
+        (actionClick)="handleTableAction($event)"
+      ></app-table>
+    </section>
+  </main>
+</div>

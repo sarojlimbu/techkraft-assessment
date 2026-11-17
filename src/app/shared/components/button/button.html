@@ -1,0 +1,17 @@
+<button
+  type="button"
+  [attr.mat-raised-button]="variant === 'elevated' ? '' : null"
+  [attr.mat-flat-button]="variant === 'filled' ? '' : null"
+  [attr.mat-stroked-button]="variant === 'outlined' ? '' : null"
+  [attr.mat-button]="variant === 'text' ? '' : null"
+  [disabled]="disabled"
+  [class]="buttonClass"
+  [ngStyle]="buttonStyle"
+  class="feature-button"
+  (click)="onClick()"
+>
+  @if (icon) {
+    <mat-icon>{{ icon }}</mat-icon>
+  }
+  <span>{{ label }}</span>
+</button>

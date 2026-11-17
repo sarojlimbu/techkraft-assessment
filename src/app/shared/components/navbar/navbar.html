@@ -1,0 +1,74 @@
+<nav class="navbar-shell">
+  <div class="brand-group" routerLink="/dashboard" aria-label="MerchantPay home">
+    <div class="brand-copy">
+      <span class="brand-name">MerchantPay</span>
+    </div>
+  </div>
+
+  <ul class="nav-links" aria-label="Main navigation">
+    <li>
+      <a
+        routerLink="/dashboard"
+        routerLinkActive="active-link"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        <i class="bi bi-grid-1x2-fill"></i>
+        Dashboard
+      </a>
+    </li>
+    <li>
+      <a
+        routerLink="/applications"
+        routerLinkActive="active-link"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        <i class="bi bi-file-earmark-text-fill"></i>
+        Applications
+      </a>
+    </li>
+    <li>
+      <a routerLink="/applications/new" routerLinkActive="active-link">
+        <i class="bi bi-plus-circle-fill"></i>
+        New Application
+      </a>
+    </li>
+    <li>
+      <a routerLink="/security-csp" routerLinkActive="active-link">
+        <i class="bi bi-lock-fill"></i>
+        Security &amp; CSP
+      </a>
+    </li>
+    <li>
+      <a routerLink="/interceptor-demo" routerLinkActive="active-link">
+        <i class="bi bi-arrow-repeat"></i>
+        Concurrent 401 Demo
+      </a>
+    </li>
+  </ul>
+
+  <div class="user-actions">
+    <label class="role-select-wrap">
+      <select
+        class="role-select"
+        [value]="role"
+        (change)="role = $any($event.target).value"
+        aria-label="Select role"
+      >
+        <option value="SALES">SALES</option>
+        <option value="REVIEWER">REVIEWER</option>
+        <option value="ADMIN">ADMIN</option>
+      </select>
+    </label>
+
+    <div class="user-pill">
+      <img
+        src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80"
+        alt="User avatar"
+      />
+      <div class="user-meta">
+        <strong>Amanda Waller</strong>
+        <span>amanda.waller@</span>
+      </div>
+    </div>
+  </div>
+</nav>
