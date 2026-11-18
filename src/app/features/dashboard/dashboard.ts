@@ -1,17 +1,19 @@
-import { AfterViewInit, Component, TemplateRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AfterViewInit, Component, TemplateRef, ViewChild, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
-import { Table, TableColumn } from '../../shared/components/table/table';
 import { Button } from '../../shared/components/button/button';
+import { Card } from '../../shared/components/card/card';
 import { AppInput } from '../../shared/components/input/input';
 import { AppSelect } from '../../shared/components/select/select';
-import { Card } from '../../shared/components/card/card';
-import { NavbarComponent } from '../../shared/components/navbar/navbar';
+import { Table, TableColumn } from '../../shared/components/table/table';
+import { UserRoleService } from '../../core/user-role.service';
+import { ApplicationStoreService } from '../../service/application-store.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,7 +25,6 @@ import { NavbarComponent } from '../../shared/components/navbar/navbar';
     AppInput,
     AppSelect,
     Card,
-    NavbarComponent,
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
@@ -35,8 +36,18 @@ import { NavbarComponent } from '../../shared/components/navbar/navbar';
   templateUrl: './dashboard.html',
 })
 export class Dashboard implements AfterViewInit {
+  private readonly router = inject(Router);
+  private readonly userRoleService = inject(UserRoleService);
+  private readonly applicationStore = inject(ApplicationStoreService);
+
   @ViewChild('viewAction') viewActionTemplate?: TemplateRef<any>;
-  @ViewChild('editAction') editActionTemplate?: TemplateRef<any>;
+  @ViewChild('reviewAction') reviewActionTemplate?: TemplateRef<any>;
+
+  readonly role = this.userRoleService.role;
+
+  get canReview(): boolean {
+    return this.role() !== 'SALES';
+  }
 
   statusOptions = [
     { label: 'All Statuses', value: 'all' },
@@ -76,12 +87,12 @@ export class Dashboard implements AfterViewInit {
       width: 220,
       actions: [
         { key: 'view', action: 'view', template: this.viewActionTemplate },
-        { key: 'edit', action: 'edit', template: this.editActionTemplate },
+        { key: 'review', action: 'review', template: this.reviewActionTemplate },
       ],
     },
   ];
 
-  tableData = [
+  private readonly sampleTableData = [
     {
       businessName: 'Acme Foods',
       merchantId: 'M-1001',
@@ -126,6 +137,28 @@ export class Dashboard implements AfterViewInit {
     },
   ];
 
+  get tableData(): Record<string, any>[] {
+    const submitted = this.applicationStore.getAll().map((application) => {
+      const business = application.form['step1'] ?? {};
+      const contact = application.form['step2'] ?? {};
+      return {
+        businessName: business['legalBusinessName'],
+        merchantId: application.id,
+        taxId: business['taxId'],
+        primaryContactName: contact['primaryContactName'],
+        contactEmail: contact['contactEmail'],
+        riskLevel: 'PENDING',
+        riskScore: 0,
+        status: application.status,
+        createdAt: application.createdAt,
+        legalEntityType: business['businessType'],
+        operatingCurrency: 'USD',
+        annualRevenue: Number(business['annualRevenue'] ?? 0),
+      };
+    });
+    return [...submitted, ...this.sampleTableData];
+  }
+
   ngAfterViewInit(): void {
     const actionsColumn = this.tableColumns[7];
 
@@ -135,7 +168,7 @@ export class Dashboard implements AfterViewInit {
       }
 
       if (actionsColumn.actions[1]) {
-        actionsColumn.actions[1].template = this.editActionTemplate;
+        actionsColumn.actions[1].template = this.reviewActionTemplate;
       }
     }
   }
@@ -145,14 +178,20 @@ export class Dashboard implements AfterViewInit {
   }
 
   handleView(row: Record<string, any>): void {
-    console.log('View row:', row);
+    this.openApplication(row);
   }
 
   handleReview(row: Record<string, any>): void {
-    console.log('Review row:', row);
+    this.openApplication(row);
   }
 
   handleTableAction(event: { action: string; row: Record<string, any> }): void {
-    console.log('Table action:', event.action, event.row);
+    this.openApplication(event.row);
+  }
+
+  private openApplication(row: Record<string, any>): void {
+    const id = row['merchantId'];
+    const isDraft = row['status'] === 'DRAFT';
+    void this.router.navigate(isDraft ? ['/applications', id, 'edit'] : ['/applications', id]);
   }
 }

@@ -1,6 +1,4 @@
 <div class="dashboard-shell">
-  <app-navbar></app-navbar>
-
   <main class="dashboard-main">
     <section class="page-header">
       <h1>Application Dashboard</h1>
@@ -52,29 +50,22 @@
     <section class="table-panel">
       <ng-template #viewAction let-row>
         <app-button
-          label="View"
+          [label]="row['status'] === 'DRAFT' ? 'Edit' : 'View'"
           variant="text"
           buttonClass="table-action-btn view-action"
           (buttonClick)="handleView(row)"
         ></app-button>
       </ng-template>
 
-      <ng-template #editAction let-row>
-        <app-button
-          label="Edit Draft"
-          variant="filled"
-          buttonClass="table-action-btn review-action"
-          (buttonClick)="handleReview(row)"
-        ></app-button>
-      </ng-template>
-
       <ng-template #reviewAction let-row>
-        <app-button
-          label="Review"
-          variant="text"
-          buttonClass="table-action-btn view-action"
-          (buttonClick)="handleReview(row)"
-        ></app-button>
+        @if (canReview && row['status'] !== 'DRAFT') {
+          <app-button
+            label="Review"
+            variant="text"
+            buttonClass="table-action-btn view-action"
+            (buttonClick)="handleReview(row)"
+          ></app-button>
+        }
       </ng-template>
 
       <app-table

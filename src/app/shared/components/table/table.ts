@@ -15,7 +15,6 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { PaginatorComponent } from '../paginator/paginator';
-import { ChipComponent } from '../chip/chip';
 
 export interface TableAction {
   key: string;
@@ -60,14 +59,7 @@ export interface MerchantRow {
 @Component({
   selector: 'app-table',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    PaginatorComponent,
-    ChipComponent,
-  ],
+  imports: [CommonModule, MatTableModule, MatButtonModule, MatIconModule, PaginatorComponent],
   styleUrl: './table.scss',
   templateUrl: './table.html',
 })

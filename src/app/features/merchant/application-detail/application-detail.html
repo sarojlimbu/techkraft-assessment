@@ -1,0 +1,181 @@
+<main class="detail-shell">
+  <div class="detail-page">
+    <header class="detail-header">
+      <div>
+        <button class="back-link" type="button" (click)="goBack()">← Applications</button>
+        <p class="eyebrow">APPLICATION {{ application.id }}</p>
+        <h1>{{ application.businessName }}</h1>
+        <p class="subtitle">Merchant application details and underwriting review</p>
+      </div>
+      <span class="status-pill" [attr.data-status]="application.status">
+        {{ application.status.replace('_', ' ') }}
+      </span>
+    </header>
+
+    <section class="overview-grid" aria-label="Risk overview">
+      <article class="overview-card">
+        <span>Risk level</span>
+        <strong [class]="'risk-value ' + application.riskLevel.toLowerCase()">{{
+          application.riskLevel
+        }}</strong>
+      </article>
+      <article class="overview-card">
+        <span>Risk score</span>
+        <strong>{{ application.riskScore }}<small> / 100</small></strong>
+      </article>
+      <article class="overview-card">
+        <span>Annual revenue</span>
+        <strong>{{ application.annualRevenue | currency: 'USD' : 'symbol' : '1.0-0' }}</strong>
+      </article>
+    </section>
+
+    <div class="detail-columns">
+      <div class="detail-sections">
+        <section class="detail-card">
+          <div class="section-heading">
+            <span class="section-icon">01</span>
+            <div>
+              <h2>Business profile</h2>
+              <p>Registered business information</p>
+            </div>
+          </div>
+          <dl class="detail-grid">
+            <div>
+              <dt>Legal business name</dt>
+              <dd>{{ application.businessName }}</dd>
+            </div>
+            <div>
+              <dt>Entity type</dt>
+              <dd>{{ application.entityType }}</dd>
+            </div>
+            <div>
+              <dt>Tax ID / EIN</dt>
+              <dd>{{ application.taxId }}</dd>
+            </div>
+            <div>
+              <dt>Annual revenue</dt>
+              <dd>{{ application.annualRevenue | currency: 'USD' : 'symbol' : '1.0-0' }}</dd>
+            </div>
+            <div class="wide">
+              <dt>Business address</dt>
+              <dd>{{ application.address }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="detail-card">
+          <div class="section-heading">
+            <span class="section-icon">02</span>
+            <div>
+              <h2>Owner &amp; contact</h2>
+              <p>Primary contact and ownership</p>
+            </div>
+          </div>
+          <dl class="detail-grid">
+            <div>
+              <dt>Primary contact</dt>
+              <dd>{{ application.contactName }}</dd>
+            </div>
+            <div>
+              <dt>Email address</dt>
+              <dd>{{ application.contactEmail }}</dd>
+            </div>
+            <div>
+              <dt>Principal owner</dt>
+              <dd>{{ application.ownerName }}</dd>
+            </div>
+            <div>
+              <dt>Ownership stake</dt>
+              <dd>{{ application.ownerStake }}%</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="detail-card">
+          <div class="section-heading">
+            <span class="section-icon">03</span>
+            <div>
+              <h2>Banking &amp; settlement</h2>
+              <p>Settlement account details</p>
+            </div>
+          </div>
+          <dl class="detail-grid">
+            <div>
+              <dt>Bank</dt>
+              <dd>{{ application.bankName }}</dd>
+            </div>
+            <div>
+              <dt>Account holder</dt>
+              <dd>{{ application.accountHolder }}</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+
+      <aside class="review-column">
+        <section class="detail-card risk-history">
+          <div class="section-heading">
+            <span class="section-icon">04</span>
+            <div>
+              <h2>Risk history</h2>
+              <p>Assessment and review activity</p>
+            </div>
+          </div>
+          <ol class="timeline">
+            @for (event of application.riskHistory; track $index) {
+              <li>
+                <span class="timeline-dot"></span>
+                <div class="timeline-content">
+                  <div class="timeline-title-row">
+                    <h3>{{ event.title }}</h3>
+                    <time>{{ event.date }}</time>
+                  </div>
+                  <p>{{ event.detail }}</p>
+                  <span class="event-actor">{{ event.actor }}</span>
+                </div>
+              </li>
+            }
+          </ol>
+        </section>
+
+        @if (canReview) {
+          <section class="detail-card reviewer-panel">
+            <div class="section-heading">
+              <span class="section-icon">05</span>
+              <div>
+                <h2>Reviewer decision</h2>
+                <p>Record an underwriting outcome</p>
+              </div>
+            </div>
+            <label for="review-note">Review note <span>(optional)</span></label>
+            <textarea
+              id="review-note"
+              rows="3"
+              [(ngModel)]="reviewNote"
+              placeholder="Add context for the decision"
+            ></textarea>
+            <div class="decision-actions">
+              <app-button
+                label="Reject"
+                variant="outlined"
+                buttonClass="reject-button"
+                (buttonClick)="rejectApplication()"
+              ></app-button>
+              <app-button
+                label="Approve"
+                variant="filled"
+                buttonClass="approve-button"
+                (buttonClick)="approveApplication()"
+              ></app-button>
+            </div>
+          </section>
+        } @else {
+          <section class="sales-note">
+            <strong>Read-only view</strong>
+            <p>Reviewer decisions are available to REVIEWER and ADMIN roles.</p>
+          </section>
+        }
+      </aside>
+    </div>
+  </div>
+</main>
