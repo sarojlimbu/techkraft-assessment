@@ -19,11 +19,15 @@ export class ApplicationStoreService {
 
   getAll(): MerchantApplication[] {
     try {
-      const stored = localStorage.getItem(this.storageKey);
-      return stored ? (JSON.parse(stored) as MerchantApplication[]) : [];
+      return this.getAllStrict();
     } catch {
       return [];
     }
+  }
+
+  getAllStrict(): MerchantApplication[] {
+    const stored = localStorage.getItem(this.storageKey);
+    return stored ? (JSON.parse(stored) as MerchantApplication[]) : [];
   }
 
   getById(id: string): MerchantApplication | undefined {

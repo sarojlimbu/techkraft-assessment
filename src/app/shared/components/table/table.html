@@ -40,6 +40,9 @@
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        <tr *matNoDataRow class="empty-row">
+          <td class="mat-mdc-cell empty-cell" [attr.colspan]="displayedColumns.length">No Record found</td>
+        </tr>
       </table>
     </div>
   </div>
