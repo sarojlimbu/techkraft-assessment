@@ -50,8 +50,8 @@
     <label class="role-select-wrap">
       <select
         class="role-select"
-        [value]="role"
-        (change)="role = $any($event.target).value"
+        [value]="role()"
+        (change)="setRole($any($event.target).value)"
         aria-label="Select role"
       >
         <option value="SALES">SALES</option>

@@ -3,6 +3,10 @@
   width: 100%;
 }
 
+.input-wrapper {
+  width: 100%;
+}
+
 .custom-input-field {
   width: 100%;
 }
@@ -39,11 +43,22 @@
   display: none;
 }
 
+:host ::ng-deep .custom-input-field .mat-mdc-floating-label {
+  opacity: 1;
+}
+
 :host ::ng-deep .custom-input-field .mdc-text-field--focused .mat-mdc-floating-label,
 :host
   ::ng-deep
   .custom-input-field
   .mdc-text-field--focused
   .mat-mdc-floating-label:not(.mat-mdc-floating-label--float-above) {
-  opacity: 0;
+  opacity: 1;
+}
+
+.input-error {
+  margin-top: 4px;
+  color: #f87171;
+  font-size: 12px;
+  line-height: 1.2;
 }

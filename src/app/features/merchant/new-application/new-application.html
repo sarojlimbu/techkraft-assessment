@@ -1,0 +1,311 @@
+<section class="application-shell">
+  <div class="wizard-card">
+    <header class="wizard-header">
+      <h1>Merchant Onboarding</h1>
+
+      @if (isEditMode) {
+        <span class="draft-badge">Editing ID: {{ applicationId ?? 'merchant' }}</span>
+      }
+
+      <button type="button" class="save-draft-btn" (click)="saveDraft()">
+        <span class="save-icon">✓</span>
+        {{
+          draftStatus === 'saving'
+            ? 'Saving...'
+            : draftStatus === 'saved'
+              ? 'Draft Saved'
+              : draftStatus === 'error'
+                ? 'Save Failed'
+                : 'Save Draft'
+        }}
+      </button>
+    </header>
+
+    <div class="stepper" aria-label="Merchant application progress">
+      @for (step of steps; track step.index) {
+        <div
+          class="step-item"
+          [class.completed]="getStepClass(step.index - 1) === 'completed'"
+          [class.active]="getStepClass(step.index - 1) === 'active'"
+          [class.pending]="getStepClass(step.index - 1) === 'pending'"
+        >
+          <span class="step-number">{{ step.index }}</span>
+          <span class="step-label">{{ step.label }}</span>
+        </div>
+      }
+    </div>
+
+    @if (currentStep === 0) {
+      <section class="form-panel" [formGroup]="getStepGroup(1)">
+        <h2>Step 1: Merchant Profile Details</h2>
+
+        <div class="fields-grid two-column">
+          <app-input
+            label="Legal Business Name"
+            placeholder="e.g. Acme Payments Inc"
+            formControlName="legalBusinessName"
+            [required]="fieldRequired('legalBusinessName')"
+            [showError]="fieldHasError('legalBusinessName')"
+          ></app-input>
+          <app-input
+            label="Legal Entity Type"
+            placeholder="LLC (Limited Liability Company)"
+            formControlName="businessType"
+            [required]="fieldRequired('businessType')"
+            [showError]="fieldHasError('businessType')"
+          ></app-input>
+          <app-input
+            label="Tax ID / EIN"
+            placeholder="12-3456789"
+            formControlName="taxId"
+            [required]="fieldRequired('taxId')"
+            [showError]="fieldHasError('taxId')"
+            [errorText]="fieldErrorText('taxId')"
+          ></app-input>
+          <app-input
+            label="Annual Revenue ($ USD)"
+            type="number"
+            placeholder="250000"
+            formControlName="annualRevenue"
+            [required]="fieldRequired('annualRevenue')"
+            [showError]="fieldHasError('annualRevenue')"
+          ></app-input>
+          <app-input
+            label="Business Street Address"
+            class="full-span"
+            placeholder="100 Main Street, Suite 400"
+            formControlName="businessAddress"
+            [required]="fieldRequired('businessAddress')"
+            [showError]="fieldHasError('businessAddress')"
+          ></app-input>
+          <app-input
+            label="City"
+            placeholder="San Francisco"
+            formControlName="city"
+            [required]="fieldRequired('city')"
+            [showError]="fieldHasError('city')"
+          ></app-input>
+          <app-input
+            label="State / Province"
+            placeholder="CA"
+            formControlName="state"
+            [required]="fieldRequired('state')"
+            [showError]="fieldHasError('state')"
+          ></app-input>
+          <app-input
+            label="Zip / Postal Code"
+            placeholder="94105"
+            formControlName="postalCode"
+            [required]="fieldRequired('postalCode')"
+            [showError]="fieldHasError('postalCode')"
+            [errorText]="fieldErrorText('postalCode')"
+          ></app-input>
+        </div>
+      </section>
+    }
+
+    @if (currentStep === 1) {
+      <section class="form-panel" [formGroup]="getStepGroup(2)">
+        <h2>Step 2: Owner &amp; Contact Details</h2>
+
+        <div class="fields-grid two-column">
+          <app-input
+            label="Primary Contact Name"
+            placeholder="John Doe"
+            formControlName="primaryContactName"
+            [required]="fieldRequired('primaryContactName')"
+            [showError]="fieldHasError('primaryContactName')"
+          ></app-input>
+          <app-input
+            label="Contact Email Address"
+            type="email"
+            placeholder="john.doe@company.com"
+            formControlName="contactEmail"
+            [required]="fieldRequired('contactEmail')"
+            [showError]="fieldHasError('contactEmail')"
+          ></app-input>
+          <app-input
+            label="Contact Phone Number"
+            placeholder="+1 (555) 000-0000"
+            formControlName="contactPhone"
+            [required]="fieldRequired('contactPhone')"
+            [showError]="fieldHasError('contactPhone')"
+            [errorText]="fieldErrorText('contactPhone')"
+          ></app-input>
+          <app-input
+            label="Principal Owner Name"
+            placeholder="John Doe"
+            formControlName="principalOwnerName"
+            [required]="fieldRequired('principalOwnerName')"
+            [showError]="fieldHasError('principalOwnerName')"
+          ></app-input>
+          <app-input
+            label="Owner SSN / National ID"
+            placeholder="999-00-1234"
+            formControlName="ownerSSN"
+            [required]="fieldRequired('ownerSSN')"
+            [showError]="fieldHasError('ownerSSN')"
+            [errorText]="fieldErrorText('ownerSSN')"
+          ></app-input>
+          <app-input
+            label="Ownership Stake (%)"
+            type="number"
+            placeholder="100"
+            formControlName="ownerStake"
+            [required]="fieldRequired('ownerStake')"
+            [showError]="fieldHasError('ownerStake')"
+          ></app-input>
+        </div>
+      </section>
+    }
+
+    @if (currentStep === 2) {
+      <section class="form-panel" [formGroup]="getStepGroup(3)">
+        <h2>Step 3: Banking &amp; Settlement Account</h2>
+
+        <div class="fields-grid two-column">
+          <app-input
+            label="Bank Name"
+            placeholder="Chase / Wells Fargo / Citi"
+            formControlName="bankName"
+            [required]="fieldRequired('bankName')"
+            [showError]="fieldHasError('bankName')"
+          ></app-input>
+          <app-input
+            label="Account Holder Name"
+            placeholder="Acme Payments Inc"
+            formControlName="accountHolderName"
+            [required]="fieldRequired('accountHolderName')"
+            [showError]="fieldHasError('accountHolderName')"
+          ></app-input>
+          <app-input
+            label="Routing / ABA Number"
+            placeholder="121000358"
+            formControlName="routingNumber"
+            [required]="fieldRequired('routingNumber')"
+            [showError]="fieldHasError('routingNumber')"
+            [errorText]="fieldErrorText('routingNumber')"
+          ></app-input>
+          <app-input
+            label="Bank Account Number"
+            placeholder="887766554433"
+            formControlName="accountNumber"
+            [required]="fieldRequired('accountNumber')"
+            [showError]="fieldHasError('accountNumber')"
+            [errorText]="fieldErrorText('accountNumber')"
+          ></app-input>
+        </div>
+      </section>
+    }
+
+    @if (currentStep === 3) {
+      <section class="form-panel" [formGroup]="getStepGroup(4)">
+        <h2>Step 4: PCI &amp; Compliance Profile</h2>
+
+        <div class="fields-grid two-column">
+          <app-input
+            label="Estimated Monthly Volume ($ USD)"
+            type="number"
+            placeholder="50000"
+            formControlName="estimatedMonthlyVolume"
+            [required]="fieldRequired('estimatedMonthlyVolume')"
+            [showError]="fieldHasError('estimatedMonthlyVolume')"
+          ></app-input>
+          <app-input
+            label="PCI-DSS Compliance Tier"
+            placeholder="Level 4 (<20K e-commerce/yr)"
+            formControlName="pciClass"
+            [required]="fieldRequired('pciClass')"
+            [showError]="fieldHasError('pciClass')"
+          ></app-input>
+          <app-input
+            label="Business License Number"
+            class="full-span"
+            placeholder="LIC-998822"
+            formControlName="businessLicenseNumber"
+            [required]="fieldRequired('businessLicenseNumber')"
+            [showError]="fieldHasError('businessLicenseNumber')"
+          ></app-input>
+        </div>
+
+        <label class="checkbox-row">
+          <input type="checkbox" formControlName="confirmCompliance" />
+          <span>
+            I confirm that all financial, tax, and ownership details provided are accurate and
+            authorize underwriting background checks.
+          </span>
+        </label>
+      </section>
+    }
+
+    @if (currentStep === 4) {
+      <section class="form-panel">
+        <h2>Step 5: Summary &amp; Submission</h2>
+
+        <div class="summary-note">
+          <span class="info-dot">i</span>
+          Please review your application details below before submitting.
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-box">
+            <h3>Business Profile</h3>
+            <p><strong>Name:</strong> {{ merchantForm.get('step1.legalBusinessName')?.value }}</p>
+            <p><strong>Entity:</strong> {{ merchantForm.get('step1.businessType')?.value }}</p>
+            <p><strong>Tax ID:</strong> {{ merchantForm.get('step1.taxId')?.value }}</p>
+            <p>
+              <strong>Annual Revenue:</strong> ${{ merchantForm.get('step1.annualRevenue')?.value }}
+            </p>
+            <p><strong>Address:</strong> {{ merchantForm.get('step1.businessAddress')?.value }}</p>
+          </div>
+
+          <div class="summary-box">
+            <h3>Contact &amp; Settlement</h3>
+            <p>
+              <strong>Owner:</strong>
+              {{ merchantForm.get('step2.principalOwnerName')?.value }}
+              ({{ merchantForm.get('step2.ownerStake')?.value }}%)
+            </p>
+            <p><strong>Email:</strong> {{ merchantForm.get('step2.contactEmail')?.value }}</p>
+            <p><strong>Bank:</strong> {{ merchantForm.get('step3.bankName')?.value }}</p>
+            <p>
+              <strong>Account Holder:</strong>
+              {{ merchantForm.get('step3.accountHolderName')?.value }}
+            </p>
+            <p>
+              <strong>Est. Volume:</strong>
+              ${{ merchantForm.get('step4.estimatedMonthlyVolume')?.value }}
+            </p>
+          </div>
+        </div>
+      </section>
+    }
+
+    <div class="actions-bar">
+      @if (!isFirstStep) {
+        <app-button
+          label="Back"
+          variant="text"
+          buttonClass="secondary-action"
+          (buttonClick)="previousStep()"
+        ></app-button>
+      }
+
+      @if (!isLastStep) {
+        <app-button
+          label="Next Step"
+          variant="filled"
+          buttonClass="primary-action"
+          (buttonClick)="nextStep()"
+        ></app-button>
+      } @else {
+        <app-button
+          label="{{ isEditMode ? 'Update Application' : 'Submit Application' }}"
+          variant="filled"
+          buttonClass="primary-action submit-btn"
+          (buttonClick)="submitApplication()"
+        ></app-button>
+      }
+    </div>
+  </div>
+</section>
