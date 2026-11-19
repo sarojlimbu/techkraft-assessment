@@ -12,8 +12,7 @@ import { Card } from '../../shared/components/card/card';
 import { AppInput } from '../../shared/components/input/input';
 import { AppSelect } from '../../shared/components/select/select';
 import { Table, TableColumn } from '../../shared/components/table/table';
-import { UserRoleService } from '../../core/user-role.service';
-import { ApplicationStoreService } from '../../service/application-store.service';
+import { ApplicationStoreService, MerchantApplication } from '../../service/application-store.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -37,156 +36,144 @@ import { ApplicationStoreService } from '../../service/application-store.service
 })
 export class Dashboard implements AfterViewInit {
   private readonly router = inject(Router);
-  private readonly userRoleService = inject(UserRoleService);
   private readonly applicationStore = inject(ApplicationStoreService);
 
   @ViewChild('viewAction') viewActionTemplate?: TemplateRef<any>;
-  @ViewChild('reviewAction') reviewActionTemplate?: TemplateRef<any>;
+  applications: MerchantApplication[] = [];
+  searchText = '';
+  selectedStatus = 'all';
+  selectedRisk = 'all';
+  loading = false;
+  errorMessage = '';
 
-  readonly role = this.userRoleService.role;
+  readonly statusOptions = [
+    { label: 'All Statuses', value: 'all' },
+    { label: 'Draft', value: 'DRAFT' },
+    { label: 'Under Review', value: 'UNDER_REVIEW' },
+    { label: 'Approved', value: 'APPROVED' },
+    { label: 'Info Requested', value: 'INFO_REQUESTED' },
+    { label: 'Rejected', value: 'REJECTED' },
+  ];
 
-  get canReview(): boolean {
-    return this.role() !== 'SALES';
+  readonly riskOptions = [
+    { label: 'All Risk Levels', value: 'all' },
+    { label: 'Low', value: 'LOW' },
+    { label: 'Medium', value: 'MEDIUM' },
+    { label: 'High', value: 'HIGH' },
+    { label: 'Critical', value: 'CRITICAL' },
+    { label: 'Pending', value: 'PENDING' },
+  ];
+
+  get stats() {
+    const rows = this.tableData;
+    return [
+      { iconClass: 'blue', value: rows.length, label: 'All merchant records' },
+      { iconClass: 'purple', value: this.countStatus(rows, 'DRAFT'), label: 'Incomplete applications' },
+      { iconClass: 'amber', value: this.countStatus(rows, 'UNDER_REVIEW'), label: 'Pending risk evaluation' },
+      { iconClass: 'green', value: this.countStatus(rows, 'APPROVED'), label: 'Active merchant accounts' },
+      { iconClass: 'purple', value: this.countStatus(rows, 'INFO_REQUESTED'), label: 'Awaiting docs' },
+      {
+        iconClass: 'red',
+        value: rows.filter((row) => ['HIGH', 'CRITICAL'].includes(row['riskLevel'])).length,
+        label: 'High / critical risk',
+        warning: true,
+      },
+    ];
   }
 
-  statusOptions = [
-    { label: 'All Statuses', value: 'all' },
-    { label: 'Draft', value: 'draft' },
-    { label: 'Under Review', value: 'under_review' },
-    { label: 'Approved', value: 'approved' },
-    { label: 'Info Requested', value: 'info_requested' },
-  ];
-
-  riskOptions = [
-    { label: 'All Risk Levels', value: 'all' },
-    { label: 'Low', value: 'low' },
-    { label: 'Medium', value: 'medium' },
-    { label: 'High', value: 'high' },
-  ];
-
-  stats = [
-    { iconClass: 'blue', value: 7, label: 'All merchant records' },
-    { iconClass: 'purple', value: 3, label: 'In progress applications' },
-    { iconClass: 'amber', value: 1, label: 'Pending risk evaluation' },
-    { iconClass: 'green', value: 1, label: 'Active merchant accounts' },
-    { iconClass: 'red', value: 2, label: 'High risk flag', warning: true },
-  ];
-
-  tableColumns: TableColumn[] = [
-    { key: 'businessName', label: 'Business Profile', width: 300 },
-    { key: 'merchantId', label: 'Merchant ID', width: 200 },
-    { key: 'taxId', label: 'Tax ID / EIN', width: 200 },
-    { key: 'primaryContactName', label: 'Primary Contact', width: 180 },
-    { key: 'riskLevel', label: 'Risk Assessment', width: 170 },
-    { key: 'status', label: 'Status', type: 'status', width: 220 },
-    { key: 'createdAt', label: 'Submitted Date', width: 220 },
+  readonly tableColumns: TableColumn[] = [
+    { key: 'businessName', label: 'Business Profile', width: 260 },
+    { key: 'merchantId', label: 'Merchant ID', width: 150 },
+    { key: 'taxId', label: 'Tax ID / EIN', width: 150 },
+    { key: 'primaryContactName', label: 'Primary Contact', width: 170 },
+    { key: 'riskLevel', label: 'Risk Assessment', width: 150 },
+    { key: 'status', label: 'Status', type: 'status', width: 170 },
+    { key: 'createdAt', label: 'Submitted Date', width: 180 },
     {
       key: 'actions',
       label: 'Actions',
       type: 'actions',
-      width: 220,
-      actions: [
-        { key: 'view', action: 'view', template: this.viewActionTemplate },
-        { key: 'review', action: 'review', template: this.reviewActionTemplate },
-      ],
-    },
-  ];
-
-  private readonly sampleTableData = [
-    {
-      businessName: 'Acme Foods',
-      merchantId: 'M-1001',
-      taxId: 'XX-1234567',
-      primaryContactName: 'Sarah Kim',
-      contactEmail: 'sarah@acmefoods.com',
-      riskLevel: 'HIGH',
-      riskScore: 82,
-      status: 'UNDER_REVIEW',
-      createdAt: '2026-11-14T10:00:00Z',
-      legalEntityType: 'LLC',
-      operatingCurrency: 'USD',
-      annualRevenue: 1200000,
-    },
-    {
-      businessName: 'Northwind Retail',
-      merchantId: 'M-1002',
-      taxId: 'XX-9876543',
-      primaryContactName: 'Daniel Ross',
-      contactEmail: 'daniel@northwind.com',
-      riskLevel: 'LOW',
-      riskScore: 28,
-      status: 'APPROVED',
-      createdAt: '2026-11-12T08:30:00Z',
-      legalEntityType: 'Corporation',
-      operatingCurrency: 'USD',
-      annualRevenue: 4500000,
-    },
-    {
-      businessName: 'Boreal Logistics',
-      merchantId: 'M-1003',
-      taxId: 'XX-4356278',
-      primaryContactName: 'Priya Shah',
-      contactEmail: 'priya@boreallogistics.com',
-      riskLevel: 'MEDIUM',
-      riskScore: 51,
-      status: 'INFO_REQUESTED',
-      createdAt: '2026-11-10T14:15:00Z',
-      legalEntityType: 'Partnership',
-      operatingCurrency: 'USD',
-      annualRevenue: 2100000,
+      width: 110,
+      actions: [{ key: 'view', action: 'view', template: this.viewActionTemplate }],
     },
   ];
 
   get tableData(): Record<string, any>[] {
-    const submitted = this.applicationStore.getAll().map((application) => {
+    return this.applications.map((application) => {
       const business = application.form['step1'] ?? {};
       const contact = application.form['step2'] ?? {};
       return {
-        businessName: business['legalBusinessName'],
+        businessName: business['legalBusinessName'] ?? 'Unnamed business',
         merchantId: application.id,
-        taxId: business['taxId'],
-        primaryContactName: contact['primaryContactName'],
-        contactEmail: contact['contactEmail'],
-        riskLevel: 'PENDING',
-        riskScore: 0,
+        taxId: this.maskTaxId(business['taxId']),
+        primaryContactName: contact['primaryContactName'] ?? '—',
+        contactEmail: contact['contactEmail'] ?? '',
+        riskLevel: application.riskLevel ?? 'PENDING',
         status: application.status,
         createdAt: application.createdAt,
-        legalEntityType: business['businessType'],
-        operatingCurrency: 'USD',
-        annualRevenue: Number(business['annualRevenue'] ?? 0),
       };
     });
-    return [...submitted, ...this.sampleTableData];
+  }
+
+  get filteredTableData(): Record<string, any>[] {
+    const query = this.searchText.trim().toLocaleLowerCase();
+    return this.tableData.filter((row) => {
+      const searchMatches =
+        !query ||
+        [row['businessName'], row['merchantId'], row['contactEmail'], row['primaryContactName']].some(
+          (value) => String(value ?? '').toLocaleLowerCase().includes(query),
+        );
+      return (
+        searchMatches &&
+        (this.selectedStatus === 'all' || row['status'] === this.selectedStatus) &&
+        (this.selectedRisk === 'all' || row['riskLevel'] === this.selectedRisk)
+      );
+    });
+  }
+
+  constructor() {
+    this.loadApplications();
   }
 
   ngAfterViewInit(): void {
-    const actionsColumn = this.tableColumns[7];
+    const actions = this.tableColumns.find((column) => column.key === 'actions')?.actions;
+    if (actions?.[0]) actions[0].template = this.viewActionTemplate;
+  }
 
-    if (actionsColumn && Array.isArray(actionsColumn.actions)) {
-      if (actionsColumn.actions[0]) {
-        actionsColumn.actions[0].template = this.viewActionTemplate;
-      }
-
-      if (actionsColumn.actions[1]) {
-        actionsColumn.actions[1].template = this.reviewActionTemplate;
-      }
+  loadApplications(): void {
+    this.loading = true;
+    this.errorMessage = '';
+    try {
+      this.applications = this.applicationStore.getAllStrict();
+    } catch {
+      this.applications = [];
+      this.errorMessage = 'Could not load applications from this browser. Check storage and try again.';
+    } finally {
+      this.loading = false;
     }
   }
 
-  handleClick(): void {
-    console.log('Button clicked from dashboard');
+  resetFilters(): void {
+    this.searchText = '';
+    this.selectedStatus = 'all';
+    this.selectedRisk = 'all';
+  }
+
+  createApplication(): void {
+    void this.router.navigate(['/applications/new']);
   }
 
   handleView(row: Record<string, any>): void {
     this.openApplication(row);
   }
 
-  handleReview(row: Record<string, any>): void {
-    this.openApplication(row);
+  private countStatus(rows: Record<string, any>[], status: string): number {
+    return rows.filter((row) => row['status'] === status).length;
   }
 
-  handleTableAction(event: { action: string; row: Record<string, any> }): void {
-    this.openApplication(event.row);
+  private maskTaxId(value?: string): string {
+    if (!value) return '—';
+    return `••-•••${value.slice(-4)}`;
   }
 
   private openApplication(row: Record<string, any>): void {

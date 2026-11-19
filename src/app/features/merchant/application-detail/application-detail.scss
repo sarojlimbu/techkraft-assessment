@@ -314,6 +314,22 @@ dd {
   overflow-wrap: anywhere;
 }
 
+.sensitive-toggle {
+  margin-left: 8px;
+  padding: 2px 7px;
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  border-radius: 6px;
+  background: rgba(99, 102, 241, 0.12);
+  color: #c7d2fe;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.sensitive-toggle:hover {
+  background: rgba(99, 102, 241, 0.24);
+}
+
 .timeline {
   display: grid;
   gap: 0;

@@ -166,6 +166,7 @@ export class ApplicationDetailComponent {
   readonly role = this.userRoleService.role;
   readonly application: ApplicationDetails;
   reviewNote = '';
+  sensitiveRevealed = false;
   decisionStatus: 'UNDER_REVIEW' | 'APPROVED' | 'INFO_REQUESTED' | 'REJECTED' = 'UNDER_REVIEW';
   decisionRisk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'MEDIUM';
   decisionScore = 50;
@@ -253,10 +254,14 @@ export class ApplicationDetailComponent {
 
   maskSensitive(value?: string): string {
     if (!value) return 'Not provided';
-    if (this.canReview) return value;
+    if (this.canReview && this.sensitiveRevealed) return value;
     const digits = value.replace(/\D/g, '');
     const visible = digits.slice(-4);
     return visible ? `•••• ${visible}` : '••••';
+  }
+
+  toggleSensitive(): void {
+    if (this.canReview) this.sensitiveRevealed = !this.sensitiveRevealed;
   }
 
   private updateDecision(): void {

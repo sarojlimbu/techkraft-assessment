@@ -45,7 +45,9 @@ export class AppInput implements ControlValueAccessor {
   }
 
   get showPlaceholder(): boolean {
-    return !!this.placeholder && this.isFocused;
+    // Keep unlabeled search fields descriptive at rest; labeled fields only
+    // reveal their placeholder on focus to avoid competing with the label.
+    return !!this.placeholder && (this.isFocused || !this.label);
   }
 
   get resolvedErrorText(): string {

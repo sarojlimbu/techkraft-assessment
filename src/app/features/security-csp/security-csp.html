@@ -1,0 +1,36 @@
+<main class="security-page">
+  <header class="security-header">
+    <p class="eyebrow">APPLICATION SECURITY</p>
+    <h1>Content Security Policy</h1>
+    <p>A browser-enforced policy that limits where page resources can load from and which scripts can run.</p>
+  </header>
+
+  <section class="security-card">
+    <h2>How CSP helps</h2>
+    <p>
+      A restrictive CSP can reduce the impact of cross-site scripting (XSS) by blocking unexpected
+      scripts, inline handlers, and untrusted resource loads. It is an extra layer of defense; it
+      does not replace safe output handling, authentication, or server-side authorization.
+    </p>
+  </section>
+
+  <section class="security-card">
+    <h2>Example response header</h2>
+    <p>Configure a policy as an HTTP response header on the production web server or hosting platform:</p>
+    <pre><code>{{ examplePolicy }}</code></pre>
+    <p class="note">
+      This is an example for this app’s current external fonts and avatar. Review and tighten the
+      allowed sources for the actual deployment. This repository has no backend or hosting-header
+      configuration, so the example is not enforced by the development server.
+    </p>
+  </section>
+
+  <section class="security-card">
+    <h2>What CSP does not protect</h2>
+    <p>
+      CSP does not encrypt application data or make browser storage secret. Merchant form data is
+      currently stored in localStorage. Role-based masking in this demo controls what the interface
+      displays, but production access decisions must also be enforced by a trusted backend.
+    </p>
+  </section>
+</main>

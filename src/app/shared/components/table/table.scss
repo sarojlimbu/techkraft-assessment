@@ -58,6 +58,21 @@
   border-left: 0;
 }
 
+.custom-mat-table .mat-mdc-cell.empty-cell:last-child {
+  position: static;
+  right: auto;
+  z-index: auto;
+  background: rgba(15, 23, 42, 0.08);
+  box-shadow: none;
+  border-right: 1px solid rgba(148, 163, 184, 0.12);
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  padding: 24px 16px;
+  color: #94a3b8;
+  text-align: center;
+}
+
 .custom-mat-table .mat-mdc-header-cell:first-child,
 .custom-mat-table .mat-mdc-cell:first-child {
   border-left: 1px solid rgba(148, 163, 184, 0.12);

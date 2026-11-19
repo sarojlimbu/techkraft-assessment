@@ -175,11 +175,14 @@ export class MerchantApplicationComponent implements OnInit, OnDestroy {
         tap(() => {
           this.draftStatus = 'saving';
         }),
-        switchMap((value) => this.persistDraft(value)),
-        catchError(() => {
-          this.draftStatus = 'error';
-          return EMPTY;
-        }),
+        switchMap((value) =>
+          this.persistDraft(value).pipe(
+            catchError(() => {
+              this.draftStatus = 'error';
+              return EMPTY;
+            }),
+          ),
+        ),
         takeUntil(this.destroy$),
       )
       .subscribe({
@@ -329,22 +332,14 @@ export class MerchantApplicationComponent implements OnInit, OnDestroy {
 
   private persistDraft(value: Record<string, unknown>): any {
     return defer(() => {
-      try {
-        if (!this.hasFormContent(value)) {
-          return of(void 0);
-        }
-        const draft = this.applicationStore.saveDraft(value, this.applicationId ?? undefined);
-        this.applicationId = draft.id;
-        localStorage.removeItem(this.draftStorageKey);
+      if (!this.hasFormContent(value)) {
         return of(void 0);
-      } catch {
-        return of(void 0).pipe(
-          tap(() => {
-            this.draftStatus = 'error';
-          }),
-          catchError(() => EMPTY),
-        );
       }
+
+      const draft = this.applicationStore.saveDraft(value, this.applicationId ?? undefined);
+      this.applicationId = draft.id;
+      localStorage.removeItem(this.draftStorageKey);
+      return of(void 0);
     });
   }
 

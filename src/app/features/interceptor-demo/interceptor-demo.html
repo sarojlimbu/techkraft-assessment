@@ -1,0 +1,127 @@
+<main class="demo-page">
+  <div class="demo-content">
+    <header class="intro-card">
+      <div class="demo-icon" aria-hidden="true">↻</div>
+      <div>
+        <p class="eyebrow">SECURITY LAB</p>
+        <h1>HTTP Interceptor &amp; Concurrent 401 Demo</h1>
+        <p class="intro-copy">
+          See how concurrent requests can wait for one token refresh, then retry with the refreshed
+          token.
+        </p>
+      </div>
+    </header>
+
+    <div class="demo-grid">
+      <section class="panel control-panel" aria-labelledby="controller-title">
+        <div class="panel-heading">
+          <span class="heading-icon" aria-hidden="true">⚙</span>
+          <div>
+            <h2 id="controller-title">Test controller</h2>
+            <p>Configure and run the refresh scenario</p>
+          </div>
+        </div>
+
+        <section class="token-card" aria-label="Current token state">
+          <div class="token-topline">
+            <span>Access token</span>
+            <span class="state-badge" [class.expired]="tokenExpired()">
+              {{ tokenExpired() ? 'EXPIRED · 401 TRIGGER' : 'VALID BEARER' }}
+            </span>
+          </div>
+          <code class="token-value">{{
+            tokenExpired() ? 'eyJ…expired-demo-token' : 'eyJ…valid-demo-token'
+          }}</code>
+          <div class="token-meta">
+            <span
+              >Refresh count <strong>{{ refreshCount() }}</strong></span
+            >
+            <span
+              >Role <strong>{{ userRoleService.role() }}</strong></span
+            >
+          </div>
+        </section>
+
+        <div class="controls">
+          <button
+            class="button expire-button"
+            type="button"
+            (click)="expireToken()"
+            [disabled]="isExecuting()"
+          >
+            <span aria-hidden="true">⚠</span> 1. Expire token
+          </button>
+          <button
+            class="button run-button"
+            type="button"
+            (click)="triggerConcurrent401Requests()"
+            [disabled]="isExecuting()"
+          >
+            @if (isExecuting()) {
+              <span class="spinner" aria-hidden="true"></span> Running 4 concurrent requests…
+            } @else {
+              <span aria-hidden="true">⚡</span> 2. Fire 4 concurrent requests
+            }
+          </button>
+          <button
+            class="button reset-button"
+            type="button"
+            (click)="resetDemo()"
+            [disabled]="isExecuting()"
+          >
+            Reset token &amp; clear logs
+          </button>
+        </div>
+      </section>
+
+      <section class="panel log-panel" aria-labelledby="log-title">
+        <div class="log-heading">
+          <div class="panel-heading">
+            <span class="heading-icon log-icon" aria-hidden="true">⌘</span>
+            <div>
+              <h2 id="log-title">Interceptor stream log</h2>
+              <p>Request and refresh events</p>
+            </div>
+          </div>
+          <button
+            class="clear-button"
+            type="button"
+            (click)="clearLogs()"
+            [disabled]="isExecuting()"
+          >
+            Clear
+          </button>
+        </div>
+
+        <div
+          #terminal
+          class="terminal"
+          role="log"
+          aria-live="polite"
+          aria-relevant="additions text"
+        >
+          @for (log of logs(); track $index) {
+            <div
+              class="log-line"
+              [class.warning]="log.includes('401') || log.includes('expired')"
+              [class.success]="log.includes('SUCCESS') || log.includes('refreshed')"
+              [class.refresh]="log.includes('POST /api/auth/refresh')"
+              [class.muted]="
+                !log.includes('401') &&
+                !log.includes('SUCCESS') &&
+                !log.includes('refreshed') &&
+                !log.includes('POST /api/auth/refresh')
+              "
+            >
+              {{ log }}
+            </div>
+          } @empty {
+            <p class="empty-log">
+              No events yet. Run the concurrent request demo to see the refresh flow.
+            </p>
+          }
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
