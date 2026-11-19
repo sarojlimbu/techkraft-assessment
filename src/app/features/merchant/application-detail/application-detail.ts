@@ -22,10 +22,17 @@ interface ApplicationDetails {
   address: string;
   contactName: string;
   contactEmail: string;
+  contactPhone?: string;
   ownerName: string;
   ownerStake: number;
+  ownerSsn?: string;
   bankName: string;
   accountHolder: string;
+  routingNumber?: string;
+  accountNumber?: string;
+  estimatedMonthlyVolume?: number;
+  pciClass?: string;
+  createdAt?: string;
   riskLevel: string;
   riskScore: number;
   status: string;
@@ -159,6 +166,9 @@ export class ApplicationDetailComponent {
   readonly role = this.userRoleService.role;
   readonly application: ApplicationDetails;
   reviewNote = '';
+  decisionStatus: 'UNDER_REVIEW' | 'APPROVED' | 'INFO_REQUESTED' | 'REJECTED' = 'UNDER_REVIEW';
+  decisionRisk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'MEDIUM';
+  decisionScore = 50;
 
   constructor() {
     const id = this.route.snapshot.paramMap.get('id') ?? 'M-1001';
@@ -183,14 +193,21 @@ export class ApplicationDetailComponent {
           .join(', '),
         contactName: contact['primaryContactName'] ?? '',
         contactEmail: contact['contactEmail'] ?? '',
+        contactPhone: contact['contactPhone'] ?? '',
         ownerName: contact['principalOwnerName'] ?? '',
         ownerStake: Number(contact['ownerStake'] ?? 0),
+        ownerSsn: contact['ownerSSN'] ?? '',
         bankName: banking['bankName'] ?? '',
         accountHolder: banking['accountHolderName'] ?? '',
-        riskLevel: 'PENDING',
-        riskScore: 0,
+        routingNumber: banking['routingNumber'] ?? '',
+        accountNumber: banking['accountNumber'] ?? '',
+        estimatedMonthlyVolume: Number(stored.form['step4']?.['estimatedMonthlyVolume'] ?? 0),
+        pciClass: stored.form['step4']?.['pciClass'] ?? '',
+        createdAt: stored.createdAt,
+        riskLevel: stored.riskLevel ?? 'PENDING',
+        riskScore: stored.riskScore ?? 0,
         status: stored.status,
-        riskHistory: [
+        riskHistory: stored.riskHistory ?? [
           {
             title: 'Application submitted',
             detail: 'Application received and queued for underwriting review.',
@@ -205,6 +222,11 @@ export class ApplicationDetailComponent {
       const details = sampleApplications[id] ?? sampleApplications['M-1001'];
       this.application = { id, ...structuredClone(details) };
     }
+    this.decisionStatus = this.application.status as typeof this.decisionStatus;
+    this.decisionRisk = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(this.application.riskLevel)
+      ? (this.application.riskLevel as typeof this.decisionRisk)
+      : 'MEDIUM';
+    this.decisionScore = this.application.riskScore;
   }
 
   get canReview(): boolean {
@@ -216,31 +238,59 @@ export class ApplicationDetailComponent {
   }
 
   approveApplication(): void {
-    this.updateDecision(
-      'APPROVED',
-      'Application approved',
-      'Application approved and ready for onboarding.',
-    );
+    this.decisionStatus = 'APPROVED';
+    this.updateDecision();
   }
 
   rejectApplication(): void {
-    const detail = this.reviewNote.trim() || 'Application rejected by reviewer.';
-    this.updateDecision('REJECTED', 'Application rejected', detail);
+    this.decisionStatus = 'REJECTED';
+    this.updateDecision();
   }
 
-  private updateDecision(status: string, title: string, detail: string): void {
+  saveDecision(): void {
+    this.updateDecision();
+  }
+
+  maskSensitive(value?: string): string {
+    if (!value) return 'Not provided';
+    if (this.canReview) return value;
+    const digits = value.replace(/\D/g, '');
+    const visible = digits.slice(-4);
+    return visible ? `•••• ${visible}` : '••••';
+  }
+
+  private updateDecision(): void {
     if (!this.canReview) {
       return;
     }
 
-    this.application.status = status;
-    this.applicationStore.updateStatus(this.application.id, status as any);
-    this.application.riskHistory.unshift({
-      title,
-      detail,
+    const statusLabels: Record<string, string> = {
+      UNDER_REVIEW: 'Application kept under review',
+      APPROVED: 'Application approved',
+      REJECTED: 'Application rejected',
+      INFO_REQUESTED: 'Additional information requested',
+    };
+    const event = {
+      title: statusLabels[this.decisionStatus],
+      detail: this.reviewNote.trim() || 'Risk assessment updated by reviewer.',
       date: new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date()),
       actor: this.role(),
-    });
+    };
+    this.application.status = this.decisionStatus;
+    this.application.riskLevel = this.decisionRisk;
+    this.application.riskScore = this.decisionScore;
+    this.application.riskHistory.unshift(event);
+    const reviewChanges = {
+      status: this.decisionStatus,
+      riskLevel: this.decisionRisk,
+      riskScore: this.decisionScore,
+      riskHistory: this.application.riskHistory,
+    };
+    if (this.applicationStore.updateReview) {
+      this.applicationStore.updateReview(this.application.id, reviewChanges);
+    } else {
+      this.applicationStore.updateStatus(this.application.id, this.decisionStatus);
+    }
     this.reviewNote = '';
   }
 }

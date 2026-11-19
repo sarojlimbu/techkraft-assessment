@@ -8,6 +8,9 @@ export interface MerchantApplication {
   status: ApplicationStatus;
   createdAt: string;
   form: Record<string, any>;
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'PENDING';
+  riskScore?: number;
+  riskHistory?: Array<{ title: string; detail: string; date: string; actor: string }>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -43,6 +46,7 @@ export class ApplicationStoreService {
     const applications = this.getAll();
     const existing = id ? applications.find((application) => application.id === id) : undefined;
     const application: MerchantApplication = {
+      ...existing,
       id: id ?? this.createId(applications),
       status,
       createdAt: existing?.createdAt ?? new Date().toISOString(),
@@ -59,6 +63,16 @@ export class ApplicationStoreService {
   updateStatus(id: string, status: ApplicationStatus): void {
     const updated = this.getAll().map((application) =>
       application.id === id ? { ...application, status } : application,
+    );
+    localStorage.setItem(this.storageKey, JSON.stringify(updated));
+  }
+
+  updateReview(
+    id: string,
+    changes: Pick<MerchantApplication, 'status' | 'riskLevel' | 'riskScore' | 'riskHistory'>,
+  ): void {
+    const updated = this.getAll().map((application) =>
+      application.id === id ? { ...application, ...changes } : application,
     );
     localStorage.setItem(this.storageKey, JSON.stringify(updated));
   }
