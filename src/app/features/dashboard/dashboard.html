@@ -1,16 +1,25 @@
 <div class="dashboard-shell">
   <main class="dashboard-main">
     <section class="page-header">
-      <h1>Application Dashboard</h1>
+      <div>
+        <h1>Application Dashboard</h1>
+      </div>
 
       <div class="header-actions">
-        <app-button label="Refresh Data" variant="text" buttonClass="ghost-btn" (buttonClick)="loadApplications()"></app-button>
         <app-button
-          label="Create Merchant App"
-          variant="filled"
-          buttonClass="primary-btn"
-          (buttonClick)="createApplication()"
+          label="Refresh Data"
+          variant="text"
+          buttonClass="ghost-btn"
+          (buttonClick)="loadApplications()"
         ></app-button>
+        @if (role() !== 'REVIEWER') {
+          <app-button
+            label="Create Merchant App"
+            variant="filled"
+            buttonClass="primary-btn"
+            (buttonClick)="createApplication()"
+          ></app-button>
+        }
       </div>
     </section>
 
@@ -18,9 +27,14 @@
       @for (stat of stats; track stat.label) {
         <app-card>
           <div class="stat-card" [class.warning-card]="stat.warning">
-            <div class="stat-icon" [ngClass]="stat.iconClass">{{ stat.warning ? '!' : '◫' }}</div>
+            <div class="stat-topline">
+              <div class="stat-label" [ngClass]="stat.iconClass">{{ stat.label }}</div>
+              <div class="stat-icon" [ngClass]="stat.iconClass" aria-hidden="true">
+                {{ stat.icon }}
+              </div>
+            </div>
             <div class="stat-value">{{ stat.value }}</div>
-            <div class="stat-label">{{ stat.label }}</div>
+            <div class="stat-description">{{ stat.description }}</div>
           </div>
         </app-card>
       }
@@ -32,7 +46,7 @@
         placeholder="Search business name, merchant ID, email..."
         icon="search"
         [value]="searchText"
-        (valueChange)="searchText = $event"
+        (valueChange)="onSearchChange($event)"
       ></app-input>
 
       <app-select
@@ -40,7 +54,7 @@
         label="All Statuses"
         [options]="statusOptions"
         [value]="selectedStatus"
-        (valueChange)="selectedStatus = $event"
+        (valueChange)="selectedStatus = $event; onFilterChange()"
       ></app-select>
 
       <app-select
@@ -48,33 +62,156 @@
         label="All Risk Levels"
         [options]="riskOptions"
         [value]="selectedRisk"
-        (valueChange)="selectedRisk = $event"
+        (valueChange)="selectedRisk = $event; onFilterChange()"
       ></app-select>
 
-      <app-button label="Reset Filters" variant="text" buttonClass="filter-btn" (buttonClick)="resetFilters()"></app-button>
+      <app-button
+        label="Reset Filters"
+        variant="text"
+        buttonClass="filter-btn"
+        (buttonClick)="resetFilters()"
+      ></app-button>
     </section>
 
     <section class="table-panel">
-      <ng-template #viewAction let-row>
-        <app-button
-          [label]="row['status'] === 'DRAFT' ? 'Edit' : 'View'"
-          variant="text"
-          buttonClass="table-action-btn view-action"
-          (buttonClick)="handleView(row)"
-        ></app-button>
+      <ng-template #businessCell let-row>
+        <div class="business-profile-cell">
+          <span class="business-initials">{{ row['businessInitials'] }}</span>
+          <span class="business-profile-copy">
+            <strong>{{ row['businessName'] }}</strong>
+            <small>{{ row['businessType'] }}</small>
+          </span>
+        </div>
       </ng-template>
 
-      @if (loading) {
+      <ng-template #taxIdCell let-row>
+        <div class="tax-id-cell">
+          <code>{{ row['taxIdVisible'] ? row['rawTaxId'] : row['taxId'] }}</code>
+          <button
+            type="button"
+            class="tax-id-toggle"
+            [attr.aria-label]="row['taxIdVisible'] ? 'Hide tax ID' : 'Show tax ID'"
+            (click)="toggleTaxId(row)"
+          >
+            @if (row['taxIdVisible']) {
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                <path
+                  d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5.2 0 8.8 4.4 10 7-.4 1-1.3 2.2-2.4 3.3M6.2 6.2C3.9 7.7 2.4 10 2 12c1.2 2.6 4.8 7 10 7 1.2 0 2.3-.2 3.3-.7"
+                />
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            }
+          </button>
+        </div>
+      </ng-template>
+
+      <ng-template #contactCell let-row>
+        <div class="contact-cell">
+          <strong>{{ row['primaryContactName'] }}</strong>
+          <small>{{ row['contactEmail'] }}</small>
+        </div>
+      </ng-template>
+
+      <ng-template #riskCell let-row>
+        <div class="risk-cell">
+          <span class="risk-badge" [ngClass]="'risk-' + row['riskLevel'].toLowerCase()">
+            {{ row['riskLevel'] }}
+          </span>
+          @if (row['riskScore'] !== null) {
+            <small>{{ row['riskScore'] }}/100</small>
+          }
+        </div>
+      </ng-template>
+
+      <ng-template #statusCell let-row>
+        <span class="status-badge" [ngClass]="row['statusClass']">
+          {{ row['statusLabel'] }}
+        </span>
+      </ng-template>
+
+      <ng-template #dateCell let-row>
+        <div class="date-cell">
+          <span>{{ row['submittedDate'] }}</span>
+          <small>{{ row['submittedTime'] }}</small>
+        </div>
+      </ng-template>
+
+      <ng-template #viewAction let-row>
+        @if (role() === 'SALES') {
+          <app-button
+            label="View"
+            variant="text"
+            buttonClass="table-action-btn view-action"
+            (buttonClick)="handleView(row)"
+          ></app-button>
+          @if (row['createdByUserId'] === roleUserId) {
+            <app-button
+              label="Edit"
+              variant="text"
+              buttonClass="table-action-btn draft-action"
+              (buttonClick)="handleEdit(row)"
+            ></app-button>
+          }
+        } @else if (role() === 'ADMIN') {
+          <app-button
+            label="Review"
+            variant="text"
+            buttonClass="table-action-btn review-action"
+            (buttonClick)="handleView(row)"
+          ></app-button>
+          <app-button
+            label="Edit"
+            variant="text"
+            buttonClass="table-action-btn draft-action"
+            (buttonClick)="handleEdit(row)"
+          ></app-button>
+        } @else {
+          <app-button
+            label="Review"
+            variant="text"
+            buttonClass="table-action-btn review-action"
+            (buttonClick)="handleView(row)"
+          ></app-button>
+        }
+      </ng-template>
+
+      <ng-template #assignmentCell let-row>
+        <select
+          class="assignment-select"
+          [value]="row['assignedReviewerId']"
+          [attr.aria-label]="'Assign ' + row['merchantId'] + ' to a reviewer'"
+          (change)="assignReviewer(row, $any($event.target).value)"
+        >
+          @for (reviewer of reviewers; track reviewer.id) {
+            <option [value]="reviewer.id">{{ reviewer.name }}</option>
+          }
+        </select>
+      </ng-template>
+
+      @if (loading()) {
         <div class="dashboard-state" role="status" aria-live="polite">Loading applications…</div>
-      } @else if (errorMessage) {
+      } @else if (errorMessage()) {
         <div class="dashboard-state dashboard-error" role="alert">
-          <p>{{ errorMessage }}</p>
-          <app-button label="Retry" variant="outlined" (buttonClick)="loadApplications()"></app-button>
+          <p>{{ errorMessage() }}</p>
+          <app-button
+            label="Retry"
+            variant="outlined"
+            (buttonClick)="loadApplications()"
+          ></app-button>
         </div>
       } @else {
         <app-table
           [columns]="tableColumns"
-          [data]="filteredTableData"
+          [data]="tableData"
+          [serverSide]="true"
+          [totalRecords]="totalRecords()"
+          [pageIndex]="pageIndex"
+          (pageChange)="onPageChange($event)"
         ></app-table>
       }
     </section>

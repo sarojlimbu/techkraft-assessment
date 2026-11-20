@@ -3,5 +3,8 @@
   [pageSizeOptions]="pageSizeOptions"
   [pageSize]="pageSize"
   [showFirstLastButtons]="showFirstLastButtons"
+  [length]="length"
+  [pageIndex]="pageIndex"
   [attr.aria-label]="ariaLabel"
+  (page)="pageChange.emit($event)"
 ></mat-paginator>

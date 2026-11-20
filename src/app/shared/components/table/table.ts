@@ -15,6 +15,7 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { PaginatorComponent } from '../paginator/paginator';
+import { PageEvent } from '@angular/material/paginator';
 
 export interface TableAction {
   key: string;
@@ -38,6 +39,7 @@ export interface TableColumn {
   type?: 'text' | 'status' | 'actions';
   width?: number;
   actions?: TableAction[];
+  cellTemplate?: TemplateRef<any>;
   statusConfig?: TableStatusConfig;
 }
 
@@ -89,6 +91,10 @@ export class Table implements AfterViewInit, OnInit, OnChanges {
       actions: '',
     },
   ];
+  @Input() serverSide = false;
+  @Input() totalRecords = 0;
+  @Input() pageIndex = 0;
+  @Output() pageChange = new EventEmitter<PageEvent>();
 
   @Output() actionClick = new EventEmitter<{ action: string; row: Record<string, any> }>();
 
@@ -103,17 +109,21 @@ export class Table implements AfterViewInit, OnInit, OnChanges {
   }
 
   ngAfterViewInit(): void {
-    if (this.paginatorComponent?.paginator) {
+    if (!this.serverSide && this.paginatorComponent?.paginator) {
       this.dataSource.paginator = this.paginatorComponent.paginator;
     }
   }
 
   ngOnChanges(): void {
     this.displayedColumns = this.columns.map((column) => column.key);
-    this.dataSource = new MatTableDataSource<Record<string, any>>(this.data);
-    if (this.paginatorComponent?.paginator) {
+    this.dataSource.data = this.data;
+    if (!this.serverSide && this.paginatorComponent?.paginator) {
       this.dataSource.paginator = this.paginatorComponent.paginator;
     }
+  }
+
+  onPageChange(event: PageEvent): void {
+    if (this.serverSide) this.pageChange.emit(event);
   }
 
   getCellValue(row: Record<string, any>, key: string): any {

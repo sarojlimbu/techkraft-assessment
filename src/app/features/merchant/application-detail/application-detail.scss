@@ -266,6 +266,17 @@ dt,
   padding: 20px;
 }
 
+.detail-error {
+  padding: 12px 14px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: 10px;
+  background: rgba(127, 29, 29, 0.2);
+  color: #fecaca;
+}
+
+.not-found-card h1 { color: #f8fafc; }
+.not-found-card p { color: #9fb1c9; }
+
 .section-heading {
   align-items: center;
   gap: 12px;
@@ -316,14 +327,26 @@ dd {
 
 .sensitive-toggle {
   margin-left: 8px;
-  padding: 2px 7px;
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  padding: 4px;
+  place-items: center;
   border: 1px solid rgba(129, 140, 248, 0.35);
   border-radius: 6px;
   background: rgba(99, 102, 241, 0.12);
   color: #c7d2fe;
-  font: inherit;
-  font-size: 0.78rem;
   cursor: pointer;
+}
+
+.sensitive-toggle svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
 }
 
 .sensitive-toggle:hover {

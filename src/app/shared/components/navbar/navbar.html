@@ -5,36 +5,40 @@
     </div>
   </div>
 
-  <ul class="nav-links" aria-label="Main navigation">
-    <li>
-      <a
-        routerLink="/dashboard"
-        routerLinkActive="active-link"
-        [routerLinkActiveOptions]="{ exact: true }"
-      >
-        <i class="bi bi-grid-1x2-fill"></i>
-        Dashboard
-      </a>
-    </li>
-    <li>
-      <a routerLink="/applications/new" routerLinkActive="active-link">
-        <i class="bi bi-plus-circle-fill"></i>
-        New Application
-      </a>
-    </li>
-    <li>
-      <a routerLink="/security-csp" routerLinkActive="active-link">
-        <i class="bi bi-lock-fill"></i>
-        Security &amp; CSP
-      </a>
-    </li>
-    <li>
-      <a routerLink="/interceptor-demo" routerLinkActive="active-link">
-        <i class="bi bi-arrow-repeat"></i>
-        Concurrent 401 Demo
-      </a>
-    </li>
-  </ul>
+  @if (role() === 'ADMIN') {
+    <ul class="nav-links" aria-label="Main navigation">
+      <li>
+        <a
+          routerLink="/dashboard"
+          routerLinkActive="active-link"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <i class="bi bi-grid-1x2-fill"></i>
+          Dashboard
+        </a>
+      </li>
+      @if (role() !== 'REVIEWER') {
+        <li>
+          <a routerLink="/applications/new" routerLinkActive="active-link">
+            <i class="bi bi-plus-circle-fill"></i>
+            New Application
+          </a>
+        </li>
+      }
+      <li>
+        <a routerLink="/security-csp" routerLinkActive="active-link">
+          <i class="bi bi-lock-fill"></i>
+          Security &amp; CSP
+        </a>
+      </li>
+      <li>
+        <a routerLink="/interceptor-demo" routerLinkActive="active-link">
+          <i class="bi bi-arrow-repeat"></i>
+          Concurrent 401 Demo
+        </a>
+      </li>
+    </ul>
+  }
 
   <div class="user-actions">
     <label class="role-select-wrap">
@@ -51,13 +55,10 @@
     </label>
 
     <div class="user-pill">
-      <img
-        src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80"
-        alt="User avatar"
-      />
+      <div class="user-avatar" aria-hidden="true">{{ userName.charAt(0).toUpperCase() }}</div>
       <div class="user-meta">
-        <strong>Amanda Waller</strong>
-        <span>amanda.waller@</span>
+        <strong>{{ userName }}</strong>
+        <span>{{ userEmail }}</span>
       </div>
     </div>
   </div>

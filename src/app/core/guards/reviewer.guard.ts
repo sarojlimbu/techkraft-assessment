@@ -8,3 +8,10 @@ export const reviewerGuard: CanActivateFn = () => {
 
   return userRoleService.role() === 'SALES' ? router.createUrlTree(['/dashboard']) : true;
 };
+
+export const salesOrAdminGuard: CanActivateFn = () => {
+  const userRoleService = inject(UserRoleService);
+  const router = inject(Router);
+
+  return userRoleService.role() === 'REVIEWER' ? router.createUrlTree(['/dashboard']) : true;
+};

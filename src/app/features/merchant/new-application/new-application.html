@@ -3,23 +3,29 @@
     <header class="wizard-header">
       <h1>Merchant Onboarding</h1>
 
-      @if (isEditMode) {
-        <span class="draft-badge">Editing ID: {{ applicationId ?? 'merchant' }}</span>
-      }
+      <div class="header-actions">
+        @if (isEditMode) {
+          <span class="draft-badge">Editing ID: {{ applicationId ?? 'merchant' }}</span>
+        }
 
-      <button type="button" class="save-draft-btn" (click)="saveDraft()">
-        <span class="save-icon">✓</span>
-        {{
-          draftStatus === 'saving'
-            ? 'Saving...'
-            : draftStatus === 'saved'
-              ? 'Draft Saved'
-              : draftStatus === 'error'
-                ? 'Save Failed'
-                : 'Save Draft'
-        }}
-      </button>
+        <button type="button" class="save-draft-btn" (click)="saveDraft()">
+          <span class="save-icon">✓</span>
+          {{
+            draftStatus === 'saving'
+              ? 'Saving...'
+              : draftStatus === 'saved'
+                ? 'Draft Saved'
+                : draftStatus === 'error'
+                  ? 'Save Failed'
+                  : 'Save Draft'
+          }}
+        </button>
+      </div>
     </header>
+
+    @if (loadError) {
+      <p class="form-error-banner" role="alert">{{ loadError }}</p>
+    }
 
     <div class="stepper" aria-label="Merchant application progress">
       @for (step of steps; track step.index) {

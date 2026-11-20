@@ -23,7 +23,12 @@
               [style.minWidth]="getColumnWidth(column)"
               [style.maxWidth]="getColumnWidth(column)"
             >
-              @if (isActionsColumn(column)) {
+              @if (column.cellTemplate) {
+                <ng-container
+                  [ngTemplateOutlet]="column.cellTemplate"
+                  [ngTemplateOutletContext]="{ $implicit: element }"
+                ></ng-container>
+              } @else if (isActionsColumn(column)) {
                 <div class="action-buttons">
                   @for (action of getColumnActions(column); track action.key) {
                     <ng-container
@@ -32,8 +37,9 @@
                     ></ng-container>
                   }
                 </div>
+              } @else {
+                {{ getCellValue(element, column.key) }}
               }
-              {{ getCellValue(element, column.key) }}
             </td>
           </ng-container>
         }
@@ -41,7 +47,9 @@
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         <tr *matNoDataRow class="empty-row">
-          <td class="mat-mdc-cell empty-cell" [attr.colspan]="displayedColumns.length">No Record found</td>
+          <td class="mat-mdc-cell empty-cell" [attr.colspan]="displayedColumns.length">
+            No Record found
+          </td>
         </tr>
       </table>
     </div>
@@ -52,6 +60,9 @@
     [pageSizeOptions]="[5, 10, 20]"
     [pageSize]="5"
     [showFirstLastButtons]="true"
+    [length]="serverSide ? totalRecords : data.length"
+    [pageIndex]="pageIndex"
     ariaLabel="Select page of merchant records"
+    (pageChange)="onPageChange($event)"
   ></app-paginator>
 </div>

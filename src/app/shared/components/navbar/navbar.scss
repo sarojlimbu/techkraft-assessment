@@ -209,12 +209,19 @@
   min-width: 0;
 }
 
-.user-pill img {
+.user-avatar {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  object-fit: cover;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #6366f1, #22d3ee);
+  color: #fff;
   border: 2px solid rgba(129, 140, 248, 0.4);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  flex: 0 0 34px;
 }
 
 .user-meta {
