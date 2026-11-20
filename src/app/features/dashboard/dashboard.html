@@ -180,19 +180,6 @@
         }
       </ng-template>
 
-      <ng-template #assignmentCell let-row>
-        <select
-          class="assignment-select"
-          [value]="row['assignedReviewerId']"
-          [attr.aria-label]="'Assign ' + row['merchantId'] + ' to a reviewer'"
-          (change)="assignReviewer(row, $any($event.target).value)"
-        >
-          @for (reviewer of reviewers; track reviewer.id) {
-            <option [value]="reviewer.id">{{ reviewer.name }}</option>
-          }
-        </select>
-      </ng-template>
-
       @if (loading()) {
         <div class="dashboard-state" role="status" aria-live="polite">Loading applications…</div>
       } @else if (errorMessage()) {

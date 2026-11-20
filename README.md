@@ -11,6 +11,38 @@ npm start
 
 Open `http://localhost:4200`. The application seeds clearly synthetic records the first time the mock API is used.
 
+## Project structure
+
+```text
+.
+├── public/                         # Static public assets
+├── src/
+│   ├── app/
+│   │   ├── core/                   # Authentication, role state, route guards, HTTP interceptors
+│   │   │   └── http/
+│   │   ├── features/               # Lazy-loaded screens and feature-specific UI
+│   │   │   ├── dashboard/
+│   │   │   ├── interceptor-demo/
+│   │   │   ├── merchant/
+│   │   │   │   ├── application-detail/
+│   │   │   │   └── new-application/
+│   │   │   └── security-csp/
+│   │   ├── service/                # Application API client and local mock data store
+│   │   ├── shared/components/      # Reusable UI components and their barrel index.ts
+│   │   ├── app.config.ts           # Application-wide providers
+│   │   ├── app.routes.ts           # Route definitions and guards
+│   │   └── app.ts                  # Root application component
+│   ├── styles.scss                # Global styles and Angular Material theme
+│   ├── test-setup.ts              # Vitest and Angular test setup
+│   └── main.ts                    # Browser application entry point
+├── angular.json                   # Angular CLI configuration
+├── package.json                   # Dependencies and npm scripts
+├── tsconfig*.json                  # TypeScript configurations
+└── vite.config.mts                # Vitest/Vite configuration
+```
+
+Feature screens are kept under `features/` and loaded through the route configuration. Shared UI is grouped by component under `shared/components/`; application-wide identity and HTTP behavior live in `core/`; application data access and mock persistence live in `service/`.
+
 ## Mock API and token refresh
 
 `provideHttpClient` registers the bearer-token interceptor followed by an in-app mock API interceptor. The mock API provides asynchronous HTTP responses for:
@@ -33,9 +65,9 @@ This is an in-browser mock API, not a separately deployed server. Its storage, t
 | --- | --- |
 | SALES | Can see every application in the dashboard table, create applications, and edit their own records. Can open details for their own records. Cannot submit review decisions. Sensitive values can be revealed or hidden. The navbar menu is hidden; **Create Merchant App** is available on the dashboard. |
 | REVIEWER | Can see and review every application. Cannot create or edit applications. Sensitive values can be revealed or hidden one field at a time. The navbar menu and reviewer identity selector are hidden. |
-| ADMIN | Can see, create, and edit all applications, submit review decisions, and manage reviewer assignments from the dashboard. Every row has **Review** and **Edit** actions. Sensitive values can be revealed one field at a time. |
+| ADMIN | Can see, create, and edit all applications and submit review decisions. Every row has **Review** and **Edit** actions. Reviewer assignment updates are restricted to Admin in the mock API. Sensitive values can be revealed one field at a time. |
 
-The role selector is a demo identity switch, not authentication. All three roles receive the full, paginated dashboard list. Sales can open details and edit only applications they created, but can see every row in the dashboard table. Reviewers and Admin can open and review every application; only Admin can edit assignments. Sensitive fields start masked and can be revealed or hidden independently by any role on the dashboard or application detail page. When switching to Sales, navigation returns to the dashboard except when already on an application detail page. Switching to Reviewer from the New Application page returns to the dashboard.
+The role selector is a demo identity switch, not authentication. All three roles receive the full, paginated dashboard list. Sales can open details and edit only applications they created, but can see every row in the dashboard table. Reviewers and Admin can open and review every application; the mock API permits only Admin to update assignments. Sensitive fields start masked and can be revealed or hidden independently by any role on the dashboard or application detail page. Switching to Sales navigates to the dashboard except when already on an application detail page. Switching to Reviewer navigates to the dashboard from any page except the dashboard and an application detail page.
 
 ## Drafts and storage
 

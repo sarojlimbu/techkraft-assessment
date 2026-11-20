@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
-import { EMPTY, Subject, catchError, finalize, of, switchMap, takeUntil } from 'rxjs';
+import { Subject, catchError, finalize, of, switchMap, takeUntil } from 'rxjs';
 import { AppInput, AppSelect, Button, Card, Table, TableColumn } from '../../shared/components';
 import { ApplicationApiService } from '../../service/application-api.service';
 import { MerchantApplication } from '../../service/application-store.service';
@@ -42,7 +42,6 @@ export class Dashboard implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   @ViewChild('viewAction') viewActionTemplate?: TemplateRef<any>;
-  @ViewChild('assignmentCell') assignmentCellTemplate?: TemplateRef<any>;
   @ViewChild('businessCell') businessCellTemplate?: TemplateRef<any>;
   @ViewChild('taxIdCell') taxIdCellTemplate?: TemplateRef<any>;
   @ViewChild('contactCell') contactCellTemplate?: TemplateRef<any>;
@@ -52,12 +51,10 @@ export class Dashboard implements OnInit, OnDestroy {
   private columnsCache?: TableColumn[];
   private columnsRole?: string;
   private columnsViewTemplate?: TemplateRef<any>;
-  private columnsAssignmentTemplate?: TemplateRef<any>;
   private columnsCellTemplates?: Array<TemplateRef<any> | undefined>;
   private tableDataCacheSource?: MerchantApplication[];
   private tableDataCache: Record<string, any>[] = [];
   readonly role = this.userRoleService.role;
-  readonly reviewers = this.userRoleService.reviewers;
   readonly applications = signal<MerchantApplication[]>([]);
   searchText = '';
   selectedStatus = 'all';
@@ -85,10 +82,6 @@ export class Dashboard implements OnInit, OnDestroy {
     { label: 'Pending', value: 'PENDING' },
   ];
 
-  get canManageAssignments(): boolean {
-    return this.role() === 'ADMIN';
-  }
-
   get roleUserId(): string {
     return this.userRoleService.userId;
   }
@@ -107,14 +100,12 @@ export class Dashboard implements OnInit, OnDestroy {
       this.columnsCache &&
       this.columnsRole === role &&
       this.columnsViewTemplate === this.viewActionTemplate &&
-      this.columnsAssignmentTemplate === this.assignmentCellTemplate &&
       this.columnsCellTemplates?.every((template, index) => template === cellTemplates[index])
     ) {
       return this.columnsCache;
     }
     this.columnsRole = role;
     this.columnsViewTemplate = this.viewActionTemplate;
-    this.columnsAssignmentTemplate = this.assignmentCellTemplate;
     this.columnsCellTemplates = cellTemplates;
     this.columnsCache = [
       { key: 'businessName', label: 'Business Profile', width: 195, cellTemplate: this.businessCellTemplate },
@@ -124,16 +115,6 @@ export class Dashboard implements OnInit, OnDestroy {
       { key: 'riskLevel', label: 'Risk Assessment', width: 125, cellTemplate: this.riskCellTemplate },
       { key: 'status', label: 'Status', width: 135, cellTemplate: this.statusCellTemplate },
       { key: 'createdAt', label: 'Submitted Date ↑', width: 130, cellTemplate: this.dateCellTemplate },
-      ...(this.canManageAssignments
-        ? [
-            {
-              key: 'assignment',
-              label: 'Assigned Reviewer',
-              width: 155,
-              cellTemplate: this.assignmentCellTemplate,
-            },
-          ]
-        : []),
       {
         key: 'actions',
         label: 'Actions',
@@ -171,7 +152,6 @@ export class Dashboard implements OnInit, OnDestroy {
         status: application.status,
         statusLabel: application.status.replaceAll('_', ' '),
         statusClass: `status-${application.status.toLocaleLowerCase().replaceAll('_', '-')}`,
-        assignedReviewerId: application.assignedReviewerId ?? 'reviewer-1',
       };
     });
     return this.tableDataCache;
@@ -307,36 +287,8 @@ export class Dashboard implements OnInit, OnDestroy {
     void this.router.navigate(['/applications', row['merchantId'], 'edit']);
   }
 
-  assignReviewer(row: Record<string, any>, reviewerId: string): void {
-    const applicationId = row['merchantId'] as string;
-    const previousReviewerId = row['assignedReviewerId'] as string;
-    this.errorMessage.set('');
-    this.setAssignedReviewer(applicationId, reviewerId);
-
-    this.api
-      .assign(applicationId, reviewerId)
-      .pipe(
-        catchError(() => {
-          this.setAssignedReviewer(applicationId, previousReviewerId);
-          this.errorMessage.set('Could not update the reviewer assignment.');
-          return EMPTY;
-        }),
-      )
-      .subscribe(() => this.setAssignedReviewer(applicationId, reviewerId));
-  }
-
   toggleTaxId(row: Record<string, any>): void {
     row['taxIdVisible'] = !row['taxIdVisible'];
-  }
-
-  private setAssignedReviewer(applicationId: string, reviewerId: string): void {
-    this.applications.update((applications) =>
-      applications.map((application) =>
-        application.id === applicationId
-          ? { ...application, assignedReviewerId: reviewerId }
-          : application,
-      ),
-    );
   }
 
   private countStatus(rows: Record<string, any>[], status: string): number {

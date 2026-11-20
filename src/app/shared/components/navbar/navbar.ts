@@ -21,11 +21,11 @@ export class NavbarComponent {
     if (role === 'SALES' || role === 'REVIEWER' || role === 'ADMIN') {
       this.userRoleService.setRole(role as UserRole);
       const currentPath = this.router.url.split(/[?#]/, 1)[0];
+      const isDashboardPage = currentPath === '/' || currentPath === '/dashboard';
       const isApplicationDetail = /^\/applications\/[^/]+$/.test(currentPath);
-      const isNewApplicationPage = currentPath === '/applications/new';
       if (
         (role === 'SALES' && !isApplicationDetail) ||
-        (role === 'REVIEWER' && isNewApplicationPage)
+        (role === 'REVIEWER' && !isDashboardPage && !isApplicationDetail)
       ) {
         void this.router.navigate(['/dashboard']);
       }
