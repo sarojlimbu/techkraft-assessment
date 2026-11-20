@@ -31,11 +31,11 @@ This is an in-browser mock API, not a separately deployed server. Its storage, t
 
 | Role | Access |
 | --- | --- |
-| SALES | Creates and edits records they created; sees only those records; cannot submit review decisions. |
-| REVIEWER | Sees records assigned to the selected reviewer identity and can submit decisions for those records. |
-| ADMIN | Sees all records and can reassign them to a reviewer. |
+| SALES | Can see every application in the dashboard table, create applications, and edit their own records. Can open details for their own records. Cannot submit review decisions. Sensitive values can be revealed or hidden. The navbar menu is hidden; **Create Merchant App** is available on the dashboard. |
+| REVIEWER | Can see and review every application. Cannot create or edit applications. Sensitive values can be revealed or hidden one field at a time. The navbar menu and reviewer identity selector are hidden. |
+| ADMIN | Can see, create, and edit all applications, submit review decisions, and manage reviewer assignments from the dashboard. Every row has **Review** and **Edit** actions. Sensitive values can be revealed one field at a time. |
 
-The role selector is a demo identity switch, not authentication. Review and sensitive-field reveals are role-aware in the interface and mock API.
+The role selector is a demo identity switch, not authentication. All three roles receive the full, paginated dashboard list. Sales can open details and edit only applications they created, but can see every row in the dashboard table. Reviewers and Admin can open and review every application; only Admin can edit assignments. Sensitive fields start masked and can be revealed or hidden independently by any role on the dashboard or application detail page. When switching to Sales, navigation returns to the dashboard except when already on an application detail page. Switching to Reviewer from the New Application page returns to the dashboard.
 
 ## Drafts and storage
 
@@ -43,7 +43,7 @@ The five-step Reactive Form validates each step and autosaves changes after a 50
 
 ## Routes
 
-Features are loaded with `loadComponent`. Role guards restrict application creation/editing and the interceptor demo. The mock API separately checks record ownership, reviewer assignment, and role permissions.
+Features are loaded with `loadComponent`. Role guards prevent Reviewer from opening application creation/editing routes and Sales from opening the interceptor demo. The mock API returns all applications in dashboard lists, limits Sales detail access and edits to their own records, allows Reviewer and Admin to review all records, and restricts assignment management to Admin.
 
 ## Tests and build
 
@@ -52,7 +52,7 @@ npm test
 npm run build -- --configuration development
 ```
 
-Vitest runs Angular TestBed specs in jsdom. Tests cover the shared concurrent refresh, role-scoped API responses, dashboard pagination/filter requests, form validation, review submission, and shared components.
+Vitest runs Angular TestBed specs in jsdom. Tests cover the shared concurrent refresh, role-based API permissions, dashboard pagination/filter requests, form validation, review submission, and shared components.
 
 ## Security and CSP
 

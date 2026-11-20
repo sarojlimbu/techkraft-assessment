@@ -95,7 +95,7 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
 
   if (parts[0] === 'api' && parts[1] === 'applications' && parts[2]) {
     const app = store.getById(parts[2]);
-    if (!app) return fail(404, 'Application not found');
+    if (!app || !canView(app, role, userId)) return fail(404, 'Application not found');
     if (request.method === 'GET' && parts.length === 3) return respond(app);
 
     if (request.method === 'PATCH' && parts[3] === 'assignment') {
@@ -135,6 +135,12 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
 
 function canEdit(app: MerchantApplication, role: string, userId: string): boolean {
   return role === 'ADMIN' || (role === 'SALES' && app.createdByUserId === userId);
+}
+
+function canView(app: MerchantApplication, role: string, userId: string): boolean {
+  if (role === 'ADMIN') return true;
+  if (role === 'REVIEWER') return true;
+  return app.createdByUserId === userId;
 }
 
 function respond<T>(body: T, delayMs = 70, status = 200): Observable<HttpResponse<T>> {

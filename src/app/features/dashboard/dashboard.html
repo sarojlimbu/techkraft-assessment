@@ -12,7 +12,7 @@
           buttonClass="ghost-btn"
           (buttonClick)="loadApplications()"
         ></app-button>
-        @if (role() === 'ADMIN') {
+        @if (role() !== 'REVIEWER') {
           <app-button
             label="Create Merchant App"
             variant="filled"
@@ -86,31 +86,27 @@
 
       <ng-template #taxIdCell let-row>
         <div class="tax-id-cell">
-          <code>{{
-            role() !== 'SALES' && row['taxIdVisible'] ? row['rawTaxId'] : row['taxId']
-          }}</code>
-          @if (role() !== 'SALES') {
-            <button
-              type="button"
-              class="tax-id-toggle"
-              [attr.aria-label]="row['taxIdVisible'] ? 'Hide tax ID' : 'Show tax ID'"
-              (click)="toggleTaxId(row)"
-            >
-              @if (row['taxIdVisible']) {
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8" />
-                  <path
-                    d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5.2 0 8.8 4.4 10 7-.4 1-1.3 2.2-2.4 3.3M6.2 6.2C3.9 7.7 2.4 10 2 12c1.2 2.6 4.8 7 10 7 1.2 0 2.3-.2 3.3-.7"
-                  />
-                </svg>
-              } @else {
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              }
-            </button>
-          }
+          <code>{{ row['taxIdVisible'] ? row['rawTaxId'] : row['taxId'] }}</code>
+          <button
+            type="button"
+            class="tax-id-toggle"
+            [attr.aria-label]="row['taxIdVisible'] ? 'Hide tax ID' : 'Show tax ID'"
+            (click)="toggleTaxId(row)"
+          >
+            @if (row['taxIdVisible']) {
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                <path
+                  d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5.2 0 8.8 4.4 10 7-.4 1-1.3 2.2-2.4 3.3M6.2 6.2C3.9 7.7 2.4 10 2 12c1.2 2.6 4.8 7 10 7 1.2 0 2.3-.2 3.3-.7"
+                />
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            }
+          </button>
         </div>
       </ng-template>
 
@@ -153,6 +149,27 @@
             buttonClass="table-action-btn view-action"
             (buttonClick)="handleView(row)"
           ></app-button>
+          @if (row['createdByUserId'] === roleUserId) {
+            <app-button
+              label="Edit"
+              variant="text"
+              buttonClass="table-action-btn draft-action"
+              (buttonClick)="handleEdit(row)"
+            ></app-button>
+          }
+        } @else if (role() === 'ADMIN') {
+          <app-button
+            label="Review"
+            variant="text"
+            buttonClass="table-action-btn review-action"
+            (buttonClick)="handleView(row)"
+          ></app-button>
+          <app-button
+            label="Edit"
+            variant="text"
+            buttonClass="table-action-btn draft-action"
+            (buttonClick)="handleEdit(row)"
+          ></app-button>
         } @else {
           <app-button
             label="Review"
@@ -161,6 +178,19 @@
             (buttonClick)="handleView(row)"
           ></app-button>
         }
+      </ng-template>
+
+      <ng-template #assignmentCell let-row>
+        <select
+          class="assignment-select"
+          [value]="row['assignedReviewerId']"
+          [attr.aria-label]="'Assign ' + row['merchantId'] + ' to a reviewer'"
+          (change)="assignReviewer(row, $any($event.target).value)"
+        >
+          @for (reviewer of reviewers; track reviewer.id) {
+            <option [value]="reviewer.id">{{ reviewer.name }}</option>
+          }
+        </select>
       </ng-template>
 
       @if (loading()) {

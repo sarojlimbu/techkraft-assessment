@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Button } from '../../../shared/components';
@@ -7,6 +8,7 @@ import { UserRoleService } from '../../../core/user-role.service';
 import { ApplicationApiService } from '../../../service/application-api.service';
 import { ApplicationStatus, MerchantApplication } from '../../../service/application-store.service';
 import { ReviewDecisionStatus } from '../../../service/application-api.service';
+import { EMPTY, catchError, finalize, startWith, switchMap, tap } from 'rxjs';
 
 interface ReviewEvent {
   title: string;
@@ -60,6 +62,7 @@ export class ApplicationDetailComponent {
   readonly loading = signal(true);
   readonly savingDecision = signal(false);
   readonly errorMessage = signal('');
+  readonly canRevealSensitive = true;
   reviewNote = '';
   readonly sensitiveVisibility: Record<string, boolean> = {};
   decisionStatus: ReviewDecisionStatus = 'UNDER_REVIEW';
@@ -72,22 +75,33 @@ export class ApplicationDetailComponent {
       this.loading.set(false);
       return;
     }
-    this.api.get(id).subscribe({
-      next: (record) => {
-        this.application.set(this.mapApplication(record));
-        this.decisionStatus = record.status === 'DRAFT' ? 'UNDER_REVIEW' : record.status;
-        this.decisionRisk =
-          record.riskLevel && record.riskLevel !== 'PENDING' ? record.riskLevel : 'MEDIUM';
-        this.decisionScore = record.riskScore ?? 50;
-        this.loading.set(false);
-      },
-      error: () => {
-        this.errorMessage.set(
-          'This application is unavailable or you do not have permission to view it.',
-        );
-        this.loading.set(false);
-      },
-    });
+    this.userRoleService.roleChanges
+      .pipe(
+        startWith(this.role()),
+        switchMap(() => {
+          this.loading.set(true);
+          this.errorMessage.set('');
+          this.application.set(null);
+          return this.api.get(id).pipe(
+            tap((record) => {
+              this.application.set(this.mapApplication(record));
+              this.decisionStatus = record.status === 'DRAFT' ? 'UNDER_REVIEW' : record.status;
+              this.decisionRisk =
+                record.riskLevel && record.riskLevel !== 'PENDING' ? record.riskLevel : 'MEDIUM';
+              this.decisionScore = record.riskScore ?? 50;
+            }),
+            catchError(() => {
+              this.errorMessage.set(
+                'This application is unavailable or you do not have permission to view it.',
+              );
+              return EMPTY;
+            }),
+            finalize(() => this.loading.set(false)),
+          );
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe();
   }
 
   get canReview(): boolean {
@@ -114,17 +128,17 @@ export class ApplicationDetailComponent {
 
   maskSensitive(value: string | undefined, field: string): string {
     if (!value) return 'Not provided';
-    if (this.canReview && this.sensitiveVisibility[field]) return value;
+    if (this.canRevealSensitive && this.sensitiveVisibility[field]) return value;
     const digits = value.replace(/\D/g, '');
     return digits ? `•••• ${digits.slice(-4)}` : '••••';
   }
 
   isSensitiveRevealed(field: string): boolean {
-    return this.canReview && Boolean(this.sensitiveVisibility[field]);
+    return this.canRevealSensitive && Boolean(this.sensitiveVisibility[field]);
   }
 
   toggleSensitive(field: string): void {
-    if (!this.canReview) return;
+    if (!this.canRevealSensitive) return;
     this.sensitiveVisibility[field] = !this.sensitiveVisibility[field];
   }
 

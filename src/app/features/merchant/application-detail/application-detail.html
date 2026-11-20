@@ -79,7 +79,7 @@
                 <dt>Tax ID / EIN</dt>
                 <dd>
                   {{ maskSensitive(application.taxId, 'taxId') }}
-                  @if (canReview) {
+                  @if (canRevealSensitive) {
                     <button
                       class="sensitive-toggle"
                       type="button"
@@ -141,7 +141,7 @@
                 <dt>Owner SSN</dt>
                 <dd>
                   {{ maskSensitive(application.ownerSsn, 'ownerSsn') }}
-                  @if (canReview) {
+                  @if (canRevealSensitive) {
                     <button
                       class="sensitive-toggle"
                       type="button"
@@ -187,7 +187,7 @@
                 <dt>Routing number</dt>
                 <dd>
                   {{ maskSensitive(application.routingNumber, 'routingNumber') }}
-                  @if (canReview) {
+                  @if (canRevealSensitive) {
                     <button
                       class="sensitive-toggle"
                       type="button"
@@ -213,7 +213,7 @@
                 <dt>Account number</dt>
                 <dd>
                   {{ maskSensitive(application.accountNumber, 'accountNumber') }}
-                  @if (canReview) {
+                  @if (canRevealSensitive) {
                     <button
                       class="sensitive-toggle"
                       type="button"
