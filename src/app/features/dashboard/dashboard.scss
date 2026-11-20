@@ -180,8 +180,7 @@ select {
 }
 
 .ghost-btn,
-.primary-btn,
-.filter-btn {
+.primary-btn {
   border-radius: 10px;
   border: 1px solid rgba(148, 163, 184, 0.22);
   padding: 10px 16px;
@@ -343,17 +342,6 @@ select {
 
 .search-input::placeholder {
   color: rgba(191, 219, 254, 0.7);
-}
-
-.filter-btn {
-  background: rgba(148, 163, 184, 0.08);
-  color: #e2e8f0;
-  border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  padding: 10px 16px;
-  height: 56px;
-  font-weight: 700;
-  min-width: 120px;
 }
 
 :host ::ng-deep .filter-btn {
