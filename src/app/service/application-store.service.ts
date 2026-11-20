@@ -8,6 +8,8 @@ export interface MerchantApplication {
   status: ApplicationStatus;
   createdAt: string;
   form: Record<string, any>;
+  createdByUserId: string;
+  assignedReviewerId?: string;
   riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'PENDING';
   riskScore?: number;
   riskHistory?: Array<{ title: string; detail: string; date: string; actor: string }>;
@@ -27,25 +29,46 @@ export class ApplicationStoreService {
 
   getAllStrict(): MerchantApplication[] {
     const stored = localStorage.getItem(this.storageKey);
-    return stored ? (JSON.parse(stored) as MerchantApplication[]) : [];
+    const applications = stored ? (JSON.parse(stored) as MerchantApplication[]) : [];
+    return applications.map((application) => ({
+      ...application,
+      // Migrate records created before the role-aware mock API was introduced.
+      createdByUserId: application.createdByUserId ?? 'sales-1',
+      assignedReviewerId: application.assignedReviewerId ?? 'reviewer-1',
+    }));
   }
 
   getById(id: string): MerchantApplication | undefined {
     return this.getAll().find((application) => application.id === id);
   }
 
-  save(form: Record<string, any>, id?: string): MerchantApplication {
-    return this.upsert(form, id, 'UNDER_REVIEW');
+  save(form: Record<string, any>, id?: string, userId = 'sales-1'): MerchantApplication {
+    return this.upsert(form, id, 'UNDER_REVIEW', userId);
   }
 
-  saveDraft(form: Record<string, any>, id?: string): MerchantApplication {
-    return this.upsert(form, id, 'DRAFT');
+  saveDraft(form: Record<string, any>, id?: string, userId = 'sales-1'): MerchantApplication {
+    return this.upsert(form, id, 'DRAFT', userId);
+  }
+
+  assignReviewer(id: string, reviewerId: string): MerchantApplication | undefined {
+    const applications = this.getAll();
+    const target = applications.find((application) => application.id === id);
+    if (!target) return undefined;
+    const updated = { ...target, assignedReviewerId: reviewerId };
+    localStorage.setItem(
+      this.storageKey,
+      JSON.stringify(
+        applications.map((application) => (application.id === id ? updated : application)),
+      ),
+    );
+    return updated;
   }
 
   private upsert(
     form: Record<string, any>,
     id: string | undefined,
     status: ApplicationStatus,
+    userId: string,
   ): MerchantApplication {
     const applications = this.getAll();
     const existing = id ? applications.find((application) => application.id === id) : undefined;
@@ -53,6 +76,9 @@ export class ApplicationStoreService {
       ...existing,
       id: id ?? this.createId(applications),
       status,
+      createdByUserId: existing?.createdByUserId ?? userId,
+      assignedReviewerId:
+        existing?.assignedReviewerId ?? (status === 'DRAFT' ? undefined : 'reviewer-1'),
       createdAt: existing?.createdAt ?? new Date().toISOString(),
       form,
     };

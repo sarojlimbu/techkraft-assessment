@@ -8,7 +8,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EMPTY, Subject, defer, of } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { EMPTY, Subject, of } from 'rxjs';
 import {
   catchError,
   debounceTime,
@@ -18,9 +19,8 @@ import {
   takeUntil,
   tap,
 } from 'rxjs/operators';
-import { AppInput } from '../../../shared/components/input/input';
-import { Button } from '../../../shared/components/button/button';
-import { ApplicationStoreService } from '../../../service/application-store.service';
+import { AppInput, Button } from '../../../shared/components';
+import { ApplicationApiService } from '../../../service/application-api.service';
 
 interface FormState {
   legalBusinessName: string;
@@ -65,7 +65,7 @@ export class MerchantApplicationComponent implements OnInit, OnDestroy {
 
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly applicationStore = inject(ApplicationStoreService);
+  private readonly applicationApi = inject(ApplicationApiService);
   private readonly fb = inject(FormBuilder);
   private readonly destroy$ = new Subject<void>();
   private readonly draftStorageKey = 'merchant-application-draft';
@@ -107,6 +107,7 @@ export class MerchantApplicationComponent implements OnInit, OnDestroy {
   applicationId: string | null = null;
   currentStep = 0;
   draftStatus: 'idle' | 'saving' | 'saved' | 'error' = 'idle';
+  loadError = '';
   private hasSubmitted = false;
 
   readonly requiredFieldsByStep: Record<number, string[]> = {
@@ -159,10 +160,13 @@ export class MerchantApplicationComponent implements OnInit, OnDestroy {
     this.mode = id ? 'edit' : 'create';
 
     if (id) {
-      const application = this.applicationStore.getById(id);
-      if (application) {
-        this.merchantForm.patchValue(application.form);
-      }
+      this.applicationApi.get(id).subscribe({
+        next: (application) => this.merchantForm.patchValue(application.form, { emitEvent: false }),
+        error: () => {
+          this.loadError =
+            'This application is unavailable or you do not have permission to edit it.';
+        },
+      });
     } else {
       this.restoreDraft();
     }
@@ -291,6 +295,7 @@ export class MerchantApplicationComponent implements OnInit, OnDestroy {
   }
 
   saveDraft(): void {
+    this.draftStatus = 'saving';
     this.persistDraft(this.merchantForm.getRawValue()).subscribe({
       next: () => {
         this.draftStatus = 'saved';
@@ -307,11 +312,29 @@ export class MerchantApplicationComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.applicationStore.save(this.merchantForm.getRawValue(), this.applicationId ?? undefined);
-    this.hasSubmitted = true;
-    this.applicationId = null;
-    localStorage.removeItem(this.draftStorageKey);
-    void this.router.navigate(['/dashboard']);
+    this.draftStatus = 'saving';
+    this.applicationApi
+      .save(this.merchantForm.getRawValue(), { draft: false, id: this.applicationId ?? undefined })
+      .subscribe({
+        next: () => {
+          this.hasSubmitted = true;
+          this.applicationId = null;
+          localStorage.removeItem(this.draftStorageKey);
+          void this.router.navigate(['/dashboard']);
+        },
+        error: (error: unknown) => {
+          this.draftStatus = 'error';
+          if (error instanceof HttpErrorResponse) {
+            const message =
+              typeof error.error?.message === 'string'
+                ? error.error.message
+                : error.statusText || 'Request failed';
+            this.loadError = `Could not submit the application (HTTP ${error.status}): ${message}`;
+          } else {
+            this.loadError = 'Could not submit the application due to an unexpected error.';
+          }
+        },
+      });
   }
 
   private restoreDraft(): void {
@@ -331,16 +354,16 @@ export class MerchantApplicationComponent implements OnInit, OnDestroy {
   }
 
   private persistDraft(value: Record<string, unknown>): any {
-    return defer(() => {
-      if (!this.hasFormContent(value)) {
-        return of(void 0);
-      }
-
-      const draft = this.applicationStore.saveDraft(value, this.applicationId ?? undefined);
-      this.applicationId = draft.id;
-      localStorage.removeItem(this.draftStorageKey);
-      return of(void 0);
-    });
+    if (!this.hasFormContent(value)) return of(void 0);
+    return this.applicationApi
+      .save(value, { draft: true, id: this.applicationId ?? undefined })
+      .pipe(
+        tap((draft) => {
+          this.applicationId = draft.id;
+          localStorage.removeItem(this.draftStorageKey);
+        }),
+        map(() => void 0),
+      );
   }
 
   private saveCurrentDraft(): void {
@@ -349,12 +372,17 @@ export class MerchantApplicationComponent implements OnInit, OnDestroy {
     }
 
     try {
-      const draft = this.applicationStore.saveDraft(
-        this.merchantForm.getRawValue(),
-        this.applicationId ?? undefined,
-      );
-      this.applicationId = draft.id;
-      localStorage.removeItem(this.draftStorageKey);
+      this.applicationApi
+        .save(this.merchantForm.getRawValue(), { draft: true, id: this.applicationId ?? undefined })
+        .subscribe({
+          next: (draft) => {
+            this.applicationId = draft.id;
+            localStorage.removeItem(this.draftStorageKey);
+          },
+          error: () => {
+            this.draftStatus = 'error';
+          },
+        });
     } catch {
       this.draftStatus = 'error';
     }

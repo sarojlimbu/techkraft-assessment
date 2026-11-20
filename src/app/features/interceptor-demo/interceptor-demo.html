@@ -25,16 +25,14 @@
         <section class="token-card" aria-label="Current token state">
           <div class="token-topline">
             <span>Access token</span>
-            <span class="state-badge" [class.expired]="tokenExpired()">
-              {{ tokenExpired() ? 'EXPIRED · 401 TRIGGER' : 'VALID BEARER' }}
+            <span class="state-badge" [class.expired]="authService.isTokenExpired()">
+              {{ authService.isTokenExpired() ? 'EXPIRED · 401 TRIGGER' : 'VALID BEARER' }}
             </span>
           </div>
-          <code class="token-value">{{
-            tokenExpired() ? 'eyJ…expired-demo-token' : 'eyJ…valid-demo-token'
-          }}</code>
+          <code class="token-value">{{ authService.accessToken() }}</code>
           <div class="token-meta">
             <span
-              >Refresh count <strong>{{ refreshCount() }}</strong></span
+              >Refresh count <strong>{{ authService.refreshCallCount() }}</strong></span
             >
             <span
               >Role <strong>{{ userRoleService.role() }}</strong></span
@@ -100,17 +98,17 @@
           aria-live="polite"
           aria-relevant="additions text"
         >
-          @for (log of logs(); track $index) {
+          @for (log of authService.interceptorLog(); track $index) {
             <div
               class="log-line"
               [class.warning]="log.includes('401') || log.includes('expired')"
               [class.success]="log.includes('SUCCESS') || log.includes('refreshed')"
-              [class.refresh]="log.includes('POST /api/auth/refresh')"
+              [class.refresh]="log.includes('POST /auth/refresh')"
               [class.muted]="
                 !log.includes('401') &&
                 !log.includes('SUCCESS') &&
                 !log.includes('refreshed') &&
-                !log.includes('POST /api/auth/refresh')
+                !log.includes('POST /auth/refresh')
               "
             >
               {{ log }}
